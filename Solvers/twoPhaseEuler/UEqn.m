@@ -176,3 +176,4 @@ UbEqnRHS =  RHS + ARHS - BRHS + CRHS + RHS2;
 %Ub.internal = UbEqnM\(UbEqnRHS+FRHS);
 
 clear M RHS A ARHS ASp B BRHS RHS1 RHS2 FRHS C CSp;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
