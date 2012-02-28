@@ -1,0 +1,231 @@
+%#######################CODIGOSANTIAGOMD###################################
+% pEqn.m
+%if (corr<4)
+% rUA.internal = 1./Aop(UEqnM, V);
+% rUA.left.type='V';
+% rUA.left.value=rUA.internal(1);
+% rUA.right.type='V';
+% rUA.right.value=rUA.internal(end);
+% rUA=setBC(rUA,constField(0,N),xC,xF,g);
+% 
+% rUAf=fvc_interpolate(rhom,w,xC,xF).*fvc_interpolate(rUA,w,xC,xF);
+% 
+% U.internal = rUA.internal.*Hop(UEqnM, UEqnRHS, U, V);
+% U=setBC(U,constField(0,N),xC,xF,g);
+% 
+% rhomPhi = fvc_interpolate(rhom,w,xC,xF).*((fvc_interpolate(U,w,xC,xF).*Sf));
+% % fvc::ddtPhiCorr(rUA, rhom, U, rhomPhi)) correction NOT INCLUDED
+% 
+% rhomPhiU=rhomPhi;
+% 
+% rhomPhi = ghf.*fvc_snGrad(rhom,xC,xF).*rUAf.*Sf;
+% %if 0
+% for nonOrth=1:nNonOrthCorr
+% 
+%     % Assembling (implicit terms)
+%     disp('Assembling p_rghEqn')
+%     [p_rghM, p_rghRHS]=fvm_laplacian(p_rgh,rUAf,xC,xF,Sf);
+% 
+%     % Calculating explicit terms (to RHS)
+%     ERHS=(fvc_ddt(rhom, rhom0, dt)+fvc_div_face(rhomPhi,V)).*V;
+% 
+%     %p_rghEqn.setReference(pRefCell, getRefCellValue(p_rgh, pRefCell));
+%     % **************** NOT IMPLEMENTED ********************
+% 
+%     % Solve
+%     disp('Solving for p_rgh')
+%     p_rgh.internal=p_rghM\(p_rghRHS+ERHS);  
+% 
+% %      if (nonOrth == nNonOrthCorr)
+% %      {
+% %          rhomPhi -= p_rghEqn.flux();
+% %      }
+% end
+% if 1
+% rhomPhi = flux(p_rghM,p_rghRHS,p_rgh); %#ok<REDEF>
+% 
+% % ****************************** PATCH *************************
+% %rhomPhi(1)=0;
+% % XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+% p = assign(p_rgh,assign(rhom,arrayToField(gh),'*'),'+');
+% 
+% % **************** NOT IMPLEMENTED ********************
+% 
+% 
+% %  if (p_rgh.needReference())
+% %  {
+% %      p += dimensionedScalar
+% %      (
+% %          "p",
+% %          p.dimensions(),
+% %          pRefValue - getRefCellValue(p, pRefCell)
+% %      );
+% %      p_rgh = p - rhom*gh;
+% %  }
+% 
+% % ****************************************************
+% 
+% % Time marching for rhom Eqn. 23.4-1 from Fluent's User's Guide
+% % rhom0=rhom;
+% % It is a fixed point iteration over rho, so that rhom0 stays rhom
+% % from previous timestep
+% 
+% rhoEqn
+% 
+% % Check continuity errors
+% % #include "mixtureContinuityErrs.H"       ---------------->>>>>>>> COMPLETAR
+% 
+% if 1
+% U.internal+=rUA.internal.*fvc_reconstruct((rhomPhi - rhomPhiU)./rUAf,Sf);
+% U=setBC(U,constField(0,N),xC,xF,g);
+% end
+% 
+% end
+%#######################@@@@@@@@@@@@@@@@###################################
+
+%surfaceScalarField alphaf(fvc::interpolate(alpha));
+alphaf = fvc_interpolate(alpha, w, xC, xF);
+%surfaceScalarField betaf(scalar(1) - alphaf);
+betaf = 1 - alphaf;
+
+%volScalarField rUaA(1.0/UaEqn.A());
+rUaA.internal = 1./Aop(UaEqnM, V);
+rUaA.left.type='V';
+rUaA.left.value=rUaA.internal(1);
+rUaA.right.type='V';
+rUaA.right.value=rUaA.internal(end);
+rUaA=setBC(rUaA,constField(0,N),xC,xF,g);
+
+%volScalarField rUbA(1.0/UbEqn.A());
+rUbA.internal = 1./Aop(UbEqnM, V);
+rUbA.left.type='V';
+rUbA.left.value=rUbA.internal(1);
+rUbA.right.type='V';
+rUbA.right.value=rUbA.internal(end);
+rUbA = setBC(rUbA,constField(0,N),xC,xF,g);
+
+%phia == (fvc::interpolate(Ua) & mesh.Sf());
+phia = fvc_interpolate(Ua, w, xC, xF).*Sf;
+%phib == (fvc::interpolate(Ub) & mesh.Sf());
+phib = fvc_interpolate(Ub, w, xC, xF).*Sf;
+
+%rUaAf = fvc::interpolate(rUaA);
+rUaAf = fvc_interpolate(rUaA, w, xC, xF);
+%surfaceScalarField rUbAf(fvc::interpolate(rUbA));
+rUbAf = fvc_interpolate(rUbA, w, xC, xF);
+
+% Ua = rUaA*UaEqn.H();
+% Ub = rUbA*UbEqn.H();
+Ua.internal = rUaA.internal.*Hop(UaEqnM, UaEqnRHS, Ua, V);
+Ub.internal = rUbA.internal.*Hop(UbEqnM, UbEqnRHS, Ub, V);
+
+
+% surfaceScalarField phiDraga
+% (
+%      fvc::interpolate(beta/rhoa*K*rUaA)*phib + rUaAf*(g & mesh.Sf())
+% );
+dRAGA1 = assign(beta,constField(transportProperties.phasea.rho,N),'/');
+dRAGA1.internal = dRAGA1.internal.*K;
+dRAGA = assign(dRAGA1,rUaA,'*');
+phiDraga = fvc_interpolate(dRAGA, w, xC, xF).*phib;
+phiDraga = phiDraga + rUaAf.*(g .* Sf);
+
+% if (g0.value() > 0.0)
+%     {
+%         phiDraga -= ppMagf*fvc::snGrad(alpha)*mesh.magSf();
+%     }
+%if (kineticTheory.on())
+%{
+%   phiDraga -= rUaAf*fvc::snGrad(kineticTheory.pa()/rhoa)*mesh.magSf();
+%}
+
+% surfaceScalarField phiDragb
+% (
+%     fvc::interpolate(alpha/rhob*K*rUbA)*phia + rUbAf*(g & mesh.Sf())
+% );
+rhob_cons = constField(transportProperties.phaseb.rho,N);
+rhob_cons.right.type = 'G';
+rhob_cons.right.setvalue = 1;
+
+dRAGB1 = assign(alpha,rhob_cons,'/');
+dRAGB1.internal = dRAGB1.internal.*K;
+dRAGB = assign(dRAGB1,rUbA,'*');
+phiDragb = fvc_interpolate(dRAGB, w, xC, xF).*phia;
+phiDragb = phiDragb + rUbAf.*(g .* Sf);
+
+
+%// Fix for gravity on outlet boundary.
+%forAll(p.boundaryField(), patchi)
+%    {
+%       if (isA<zeroGradientFvPatchScalarField>(p.boundaryField()[patchi]))
+%       {
+%           phiDraga.boundaryField()[patchi] = 0.0;
+%           phiDragb.boundaryField()[patchi] = 0.0;
+%       }
+%    }
+
+%phia = (fvc::interpolate(Ua) & mesh.Sf()) + fvc::ddtPhiCorr(rUaA, Ua, phia)
+%         + phiDraga;
+phia = (fvc_interpolate(Ua, w, xC, xF).*Sf) + fvc_ddtPhiCorr(rUaA, Ua0, phia0,w,xC,xF,Sf,dt,N)...
+        + phiDraga;
+
+% phib = (fvc::interpolate(Ub) & mesh.Sf()) + fvc::ddtPhiCorr(rUbA, Ub, phib)
+%          + phiDragb;
+phib = (fvc_interpolate(Ub, w, xC, xF) .*Sf) + fvc_ddtPhiCorr(rUbA, Ub0, phib0,w,xC,xF,Sf,dt,N)...
+        + phiDragb;
+
+%phi = alphaf*phia + betaf*phib;
+phi = alphaf.*phia + betaf.*phib;
+
+% surfaceScalarField Dp
+% (
+%      "(rho*(1|A(U)))",
+%      alphaf*rUaAf/rhoa + betaf*rUbAf/rhob
+% );
+Dp = alphaf.*rUaAf./transportProperties.phasea.rho + betaf.*rUbAf./transportProperties.phaseb.rho;
+
+% while (pimple.correctNonOrthogonal())
+% {
+%    fvScalarMatrix pEqn
+%    (
+%      fvm::laplacian(Dp, p) == fvc::div(phi)
+%    );
+disp('Assembling p_rghEqn')
+
+[Ap, ApRHS] = fvm_laplacian(p_rgh, Dp, xC, xF, Sf);
+
+% pEqn.setReference(pRefCell, pRefValue);
+% 
+% pEqn.solve(mesh.solver(p.select(pimple.finalInnerIter())));
+%
+p_rgh.internal = Ap\(ApRHS+fvc_div_face(phi,V));
+
+% if (pimple.finalNonOrthogonalIter())
+% {
+%     surfaceScalarField SfGradp(pEqn.flux()/Dp);
+SfGradp = (flux(Ap,ApRHS,p_rgh)./Dp);
+%     phia -= rUaAf*SfGradp/rhoa;
+phia = phia - rUaAf.*SfGradp/transportProperties.phasea.rho;
+%     phib -= rUbAf*SfGradp/rhob;
+phib = phib - rUbAf.*SfGradp/transportProperties.phaseb.rho;
+%     phi = alphaf*phia + betaf*phib;
+phi = alphaf.*phia + betaf.*phib;
+% 
+%     p.relax();
+%     SfGradp = pEqn.flux()/Dp;
+% 
+%     Ua += fvc::reconstruct(phiDraga - rUaAf*SfGradp/rhoa);
+Ua.internal = Ua.internal + fvc_reconstruct(phiDraga - rUaAf.*SfGradp/transportProperties.phasea.rho,Sf);
+
+%     Ua.correctBoundaryConditions();
+% 
+%     Ub += fvc::reconstruct(phiDragb - rUbAf*SfGradp/rhob);
+Ub.internal = Ub.internal + fvc_reconstruct(phiDragb - rUbAf.*SfGradp/transportProperties.phaseb.rho,Sf);
+%     Ub.correctBoundaryConditions();
+% 
+%     U = alpha*Ua + beta*Ub;
+U = assign( assign(alpha,Ua,'*')  ,   assign(beta,Ub,'*'), '+');
+
+%  }
+% }
+% }
