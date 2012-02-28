@@ -1,11 +1,11 @@
-function A = fvm_Sp(Spfield,V)
-    % Gives the matrix
-    % fvm_Sp(Spfield,V)
+function [A] = fvm_Sp(SpField, V)
+    % Gives the matrix for an implicit source operator
     %
-    % Spfield:  
-    % V: Volume
+    % [A] = fvm_Sp(Spfield, V)
     %
-    % fvm.diag() += mesh.V()*sp.field();
+    % SpField: source field  
+    % V: cell volumes
+    %
     
     A=diag(Spfield.*V);
 
