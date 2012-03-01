@@ -7,6 +7,6 @@ function [A] = fvm_Sp(SpField, V)
     % V: cell volumes
     %
     
-    A=diag(Spfield.*V);
+    A=diag(SpField.*V);
 
 end

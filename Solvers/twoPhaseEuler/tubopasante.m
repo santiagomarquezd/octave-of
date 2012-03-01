@@ -2,7 +2,7 @@
 xleft=0;
 xright=1;
 % Number of cells
-N=50;
+N=4;
 
 % Cross sectional areas
 S=0.02;

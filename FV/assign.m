@@ -48,8 +48,8 @@ function [sol]=assign(first, second, op)
 	sol.internal=first.internal./second.internal;
 
 	% Boundary conditions
-	sol.left.value=first.left.value/second.left.setvalue;
-	sol.right.value=first.right.value/second.right.setvalue;
+	sol.left.value=first.left.setvalue/second.left.setvalue;
+	sol.right.value=first.right.setvalue/second.right.setvalue;
   
   elseif (op=='^')
 	% Internal field

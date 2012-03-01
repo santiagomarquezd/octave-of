@@ -99,8 +99,8 @@ disp('**************** Starting time loop:****************\n')
 %              #include "alphaEqn.H"
                alphaEqn
                
-               figure (1)
-               plot(xC,alpha.internal)
+%               figure (1)
+%               plot(xC,alpha.internal)
 %              #include "liftDragCoeffs.H"
                liftDragCoeffs
 %              #include "UEqns.H"

@@ -26,22 +26,22 @@ function [A, RHS]=fvm_laplacian(field,gammaf,xC,xF,Sf)
     RHS=zeros(N,1);
     
     % Left BC
-    if (field.left.type=='V')
+    if (strcmp(field.left.type,'V'))
 	  RHS(1)=-field.left.setvalue*gammaf(1)*Sf(1)/(xC(1)-xF(1));
 	  A(1,1)=-(gammaf(1)*Sf(1)/(xC(1)-xF(1))+gammaf(2)*Sf(2)/(xC(2)-xC(1)));
 	  A(1,2)=gammaf(2)*Sf(2)/(xC(2)-xC(1));
-    elseif (field.left.type=='BP' | field.left.type=='G')
+    elseif (strcmp(field.left.type,'BP') || strcmp(field.left.type,'G'))
 	  RHS(1)=gammaf(1)*field.left.gradient*Sf(1);
 	  A(1,1)=-gammaf(2)*Sf(2)/(xC(2)-xC(1));
 	  A(1,2)=gammaf(2)*Sf(2)/(xC(2)-xC(1));
     end
     
     % Right BC  
-    if (field.right.type=='V')
+    if (strcmp(field.right.type,'V'))
 	  RHS(N)=-field.right.setvalue*gammaf(end)*Sf(end)/(xF(end)-xC(end));
 	  A(N,N)=-(gammaf(end)*Sf(end)/(xF(end)-xC(end))+gammaf(end-1)*Sf(end-1)/(xC(end)-xC(end-1)));
 	  A(N,N-1)=gammaf(end-1)*Sf(end-1)/(xC(end)-xC(end-1));
-    elseif (field.left.type=='BP' | field.left.type=='G')
+    elseif (strcmp(field.right.type,'BP') || strcmp(field.right.type,'G'))
 	  RHS(end)=-gammaf(end)*field.right.gradient*Sf(end);
 	  A(N,N)=-gammaf(end-1)*Sf(end-1)/(xC(end)-xC(end-1));
 	  A(N,N-1)=gammaf(end-1)*Sf(end-1)/(xC(end)-xC(end-1));

@@ -87,8 +87,7 @@ RHS2 = beta.internal/(transportProperties.phaseb.rho).*(liftCoef + (transportPro
 
 % Pressure terms are calculated apart in order to correctly calculate the H operator
 %FRHS=fvc_reconstruct((-ghf.*fvc_snGrad(rho,xC,xF)-fvc_snGrad(p_rgh,xC,xF)).*Sf,Sf).*V;
-
-FRHS=fvc_reconstruct(-fvc_snGrad(p_rgh,xC,xF).*Sf,Sf).*V;
+% FRHS=fvc_reconstruct(-fvc_snGrad(p_rgh,xC,xF).*Sf,Sf).*V;
 
 % Final assembling
 UaEqnM = M + A - ASp - B + C -CSp + RHS1;  

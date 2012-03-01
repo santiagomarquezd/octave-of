@@ -166,12 +166,12 @@ phiDragb = phiDragb + rUbAf.*(g .* Sf);
 
 %phia = (fvc::interpolate(Ua) & mesh.Sf()) + fvc::ddtPhiCorr(rUaA, Ua, phia)
 %         + phiDraga;
-phia = (fvc_interpolate(Ua, w, xC, xF).*Sf) + fvc_DdtPhiCorr_3arg(rUaA, Ua0, phia0,w,xC,xF,Sf,dt,N)...
+phia = (fvc_interpolate(Ua, w, xC, xF).*Sf) + fvc_ddtPhiCorr(rUaA, Ua0, phia0,w,xC,xF,Sf,dt,N)...
         + phiDraga;
     
 % phib = (fvc::interpolate(Ub) & mesh.Sf()) + fvc::ddtPhiCorr(rUbA, Ub, phib)
 %          + phiDragb;
-phib = (fvc_interpolate(Ub, w, xC, xF) .*Sf) + fvc_DdtPhiCorr_3arg(rUbA, Ub0, phib0,w,xC,xF,Sf,dt,N)...
+phib = (fvc_interpolate(Ub, w, xC, xF) .*Sf) + fvc_ddtPhiCorr(rUbA, Ub0, phib0,w,xC,xF,Sf,dt,N)...
         + phiDragb;
 
 %phi = alphaf*phia + betaf*phib;
