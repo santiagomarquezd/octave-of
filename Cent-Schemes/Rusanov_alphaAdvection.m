@@ -25,7 +25,7 @@ alphagRight=1;
 dt=0.001;
 
 % Number of timesteps
-timesteps=1000; %100;
+timesteps=5000; %100;
 
 % Number of cells
 N=100;
@@ -103,10 +103,16 @@ for i=1:timesteps
   alphag(1)=alphag(1)-lambda*(flux(2)-fluxleft)+lambda*(a_j_plus_half(1)*(alphag(2)-alphag(1))-a_j_minus_half(1)*(alphag(1)-alphagLeft));
   alphag(end)=alphag(end)-lambda*(fluxright-flux(end-1))+lambda*(a_j_plus_half(end)*(alphagRight-alphag(end))-a_j_minus_half(end)*(alphag(end)-alphag(end-1)));
   
+  % Calculation of mean velocity from alphag
+  Vm=V0.*(1-alphag(1:end)).*alphag(1:end).*(rhog./rhom-1);  
   
-  figure(1); plot(xC,alphag);
-  figure(2); plot(eig1);
-  figure(3); plot(eig2);
+  if 0
   
+    figure(1); plot(xC,alphag);
+    figure(2); plot(eig1);
+    figure(3); plot(eig2);
+    figure(4); plot(xC,Vm);
+  
+  end
 
 end
