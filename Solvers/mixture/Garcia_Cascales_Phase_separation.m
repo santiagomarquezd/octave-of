@@ -16,7 +16,7 @@ g=-10;
 % Relative velocity model (1: UADE, 2: Schiller-Naumann)
 VpqModel=1;
 % UADE model Vpq=V0.*((alphaMax-min(alpha.internal,alphaMax))/alphaMax).^a
-V0=0.282;
+V0=2.82; %0.282;
 alphaMax=1;
 aexp=1;
 
@@ -25,10 +25,10 @@ alphag0=0.5;
 
 % Numerical parameters
 % Time-step
-dt=0.001;%0.141843971631206/10; %0.141843971631206/10; %0.00001;
+dt=0.0001;%0.141843971631206/10; %0.141843971631206/10; %0.00001;
 
 % Number of timesteps
-timesteps=100;
+timesteps=4000;
 
 % Numerical diffusivity for stabilization multiplier
 mult=1;    %nu=mult*1/2*mean(abs(U)+abs(Vpq))*mean(dx)*ones(size(rhomPhi));

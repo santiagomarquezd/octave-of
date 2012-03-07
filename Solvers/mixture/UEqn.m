@@ -12,27 +12,29 @@ if (fullVerbose==1)
 end
 %[M, RHS] = fvm_ddt(rhom,U0,V,dt,1);
 % Lagged rho version (???????????????)
-[M, RHS] = fvm_ddt(rhom,rhom0,U0,V,dt,1);
-[A, ARHS]= fvm_div_flux_cell(rhomPhi,U0,xC,xF,w,1);
+[ddtM, ddtRHS] = fvm_ddt(rhom,rhom0,U0,V,dt,1);
+[convM, convRHS]= fvm_div_flux_cell(rhomPhi,U0,xC,xF,w,1);
 
 % Calculating explicit terms (to RHS)
 % cp updating
 cp=alphag.internal.*rhog./rhom.internal;
 arg=assign(assign(rhom,arrayToField((1-cp).*cp),'*'),assign(Vpq,constField(2,N),'^'),'*');
-ERHS=-fvc_div_cell(arg, w, xC, xF, Sf, V).*V;
+driftRHS=-fvc_div_cell(arg, w, xC, xF, Sf, V).*V;
 % Pressure terms are calculated apart in order to correctly calculate the H operator
-FRHS=fvc_reconstruct((-ghf.*fvc_snGrad(rhom,xC,xF)-fvc_snGrad(p_rgh,xC,xF)).*Sf,Sf).*V;
-
+volRHS=fvc_reconstruct((-ghf.*fvc_snGrad(rhom,xC,xF)-fvc_snGrad(p_rgh,xC,xF)).*Sf,Sf).*V;
 
 % Final assembling
-UEqnM=M+A;
-UEqnRHS=RHS+ARHS+ERHS;
+UEqnM=ddtM+convM;
+UEqnRHS=ddtRHS+convRHS+driftRHS;
 
 % Solve
 if (fullVerbose==1)
   disp('Solving for U')
 end
-U.internal=UEqnM\(UEqnRHS+FRHS); 
+U.internal=UEqnM\(UEqnRHS+volRHS); 
+
+% U from momentum predictor is stored for debugging purposes
+UmomPred=U;
 
 % U bounding
 if 0
