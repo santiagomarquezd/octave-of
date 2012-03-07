@@ -52,15 +52,15 @@ elseif (alphaExplicit==1)
   directionFluxAG0=sign(phiAlpha(2:end-1,1)+1E-9);
   Alphag0Int=fvc_general_interpolate(Alphag0, xC, xF,-1,directionFluxAG0);
 
-  if (initia==0)
-
-    % Automatic calculation of timestep
-    AlphagFinal=(1-alphag0.internal(end))*rhog/(rhol-(rhol/rhog-1))+Alphag0.internal(end);
-
-    dt=-(AlphagFinal-Alphag0.internal(end)*rhom0.internal(end)./rhom.internal(end))*...
-      dx*rhom.internal(end)/(phiAlpha(end)*Alphag0Int(end)-phiAlpha(end-1).*Alphag0Int(end-1))
-
-  end
+%    if (initia==0)
+%  
+%      % Automatic calculation of timestep
+%      AlphagFinal=(1-alphag0.internal(end))*rhog/(rhol-(rhol/rhog-1))+Alphag0.internal(end);
+%  
+%      dt=-(AlphagFinal-Alphag0.internal(end)*rhom0.internal(end)./rhom.internal(end))*...
+%        dx*rhom.internal(end)/(phiAlpha(end)*Alphag0Int(end)-phiAlpha(end-1).*Alphag0Int(end-1))
+%  
+%    end
 
   % Solve
   if (fullVerbose==1)

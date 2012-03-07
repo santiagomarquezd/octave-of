@@ -4,7 +4,8 @@
 
 % Variables clearance
 clear all;
-close all;
+%close all;
+page_screen_output(0);
 
 % Physical paramaters
 rhog=1;
@@ -25,10 +26,10 @@ alphagRight=1;
 dt=0.001;
 
 % Number of timesteps
-timesteps=5000; %100;
+timesteps=3647; %100;
 
 % Number of cells
-N=100;
+N=10000;
 
 % Numerical Pre-processing
 
@@ -44,6 +45,9 @@ alphag=ones(N,1)*alphag0;
 
 % Temporal loop
 for i=1:timesteps
+
+  % Prints the actual iteration
+  i
 
   if 1  
     % Continuous version (mean velocity calculated by the same formula in all of domain extension)

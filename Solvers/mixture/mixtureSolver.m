@@ -72,6 +72,8 @@ for step=1:timesteps
 %if (step<timesteps)
 
   % Set fields as 'old' states
+  rhom0bak=rhom0; % For time derivative processing
+  U0bak=U0; % For time derivative processing
   rhom0=rhom;
   alphag0=alphag;
   U0=U;
@@ -85,3 +87,9 @@ end % Ends condition for temporal loop
 save -binary dump.dat rhom0 rhom alphag0 alphag U0 U rhomPhi0 rhomPhi Alphag0 Alphag
 
 %end % End function mixtureSolver
+
+temporal=fvc_ddt(assign(U,rhom,'*'), assign(U0bak,rhom0bak,'*'), dt);
+convec=fvc_div_face(rhomPhi,V);
+drift=fvc_div_cell(arg, w, xC, xF, Sf, V);
+volumetric=fvc_reconstruct((-ghf.*fvc_snGrad(rhom,xC,xF)-fvc_snGrad(p_rgh,xC,xF)).*Sf,Sf);
+

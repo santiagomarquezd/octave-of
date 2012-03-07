@@ -28,7 +28,7 @@ alphag0=0.5;
 dt=0.001;%0.141843971631206/10; %0.141843971631206/10; %0.00001;
 
 % Number of timesteps
-timesteps=1; %100; %10;
+timesteps=100;
 
 % Numerical diffusivity for stabilization multiplier
 mult=1;    %nu=mult*1/2*mean(abs(U)+abs(Vpq))*mean(dx)*ones(size(rhomPhi));
@@ -48,7 +48,7 @@ alphaExplicit=1; %1: explicit, 0: implicit
 N=100; %6;
 
 % Number of PISO correction in the last timestep
-stopCorr=1; 
+stopCorr=3; 
 
 % Full message selection
 fullVerbose=0;  %1: enable, 0:disabled
