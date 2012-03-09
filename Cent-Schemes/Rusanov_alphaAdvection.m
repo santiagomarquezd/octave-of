@@ -26,7 +26,7 @@ alphagRight=1;
 dt=0.001;
 
 % Number of timesteps
-timesteps=1000; %100;
+timesteps=5000; %100;
 
 % Number of cells
 N=1000;
@@ -41,7 +41,22 @@ xF=(xleft:dx:xright)';
 lambda=dt/dx;
 
 % Fields initialization
-alphag=ones(N,1)*alphag0;
+% alphag
+% alphag=ones(N,1)*alphag0;
+alphag.internal=ones(N,1)*alphag0;
+alphag.left.type='V';
+alphag.left.value=alphagLeft;
+alphag.right.type='V';
+alphag.right.value=alphagRight;
+
+alphag=setBC(alphag,constField(0,N),xC,xF,0);
+
+% Flux
+flux.internal=zeros(N,1);
+flux.left.type='V';
+flux.left.value=0;
+flux.right.type='V';
+flux.right.value=0;
 
 % Temporal loop
 for i=1:timesteps
@@ -53,15 +68,22 @@ for i=1:timesteps
     % Rusanov scheme
     % u_j^(n+1)=u_j^n-lambda/2*(f(u_(j+1)^n)-f(u_(j-1)^n))+1/2*(lambda*a_(j+1/2)^n*(u_(j+1)^n-u_j^n)-lambda*a_(j-1/2)^n*(u_j^n-u_(j-1)^n))   
 
-    % Flux evaluation (remember that it is a cell flux)
-    rhomLeft=rhog*alphagLeft+(1-alphagLeft)*rhol;
-    fluxleft=(V0*(1-alphagLeft)*(1-alphagLeft*rhog/rhomLeft)+V0*(1-alphagLeft)*alphagLeft.*(rhog/rhomLeft-1))*alphagLeft;
-    rhomRight=rhog*alphagRight+(1-alphagRight)*rhol;
-    fluxright=(V0*(1-alphagRight)*(1-alphagRight*rhog/rhomRight)+V0*(1-alphagRight)*alphagRight.*(rhog/rhomRight-1)).*alphagRight;
-    rhom=rhog*alphag+(1-alphag)*rhol;
-    flux=(V0.*(1-alphag(1:end)).*(1-alphag(1:end).*rhog./rhom)+V0.*(1-alphag(1:end)).*alphag(1:end).*(rhog./rhom-1)).*alphag(1:end);
+    % Flux evaluation (remember that it is a cell flux, flux at boundaries are stored in BC's)
+    
+    % rhom field
+    rhom=assign(assign(alphag,constField(rhog,N),'*'),assign(assign(constField(1,N),alphag,'-'),constField(rhol,N),'*'),'+');
+    rhom=setBC(rhom,constField(0,N),xC,xF,0);
 
-  if 1  
+    flux.internal=(V0.*(1-alphag.internal(1:end)).*(1-alphag.internal(1:end).*rhog./rhom.internal)+V0.*(1-alphag.internal(1:end)).*alphag.internal(1:end).*(rhog./rhom.internal-1)).*alphag.internal(1:end);
+
+    flux.left.value=(V0*(1-alphag.left.setvalue)*(1-alphag.left.setvalue*rhog/rhom.left.setvalue)+V0*(1-alphag.left.setvalue)*alphag.left.setvalue.*(rhog/rhom.left.setvalue-1))*alphag.left.setvalue;
+    
+    flux.right.value=(V0*(1-alphag.right.setvalue)*(1-alphag.right.setvalue*rhog/rhom.right.setvalue)+V0*(1-alphag.right.setvalue)*alphag.right.setvalue.*(rhog/rhom.right.setvalue-1)).*alphag.right.setvalue;
+    
+    flux=setBC(flux,constField(0,N),xC,xF,0);
+    
+
+  if 0  
        
 
 	  alphag=[alphagLeft; alphag; alphagRight];
@@ -91,15 +113,23 @@ for i=1:timesteps
   
   end
   
-  % Rosunov scheme for non boundary cells
-  alphag(2:end-1)=alphag(2:end-1)-lambda/2*(flux(3:end)-flux(1:end-2))+1/2*lambda*(a_j_plus_half(2:end-1).*(alphag(3:end)-alphag(2:end-1))-a_j_minus_half(2:end-1).*(alphag(2:end-1)-alphag(1:end-2)));
-   
-  % BC's
-  alphag(1)=alphag(1)-lambda*(flux(2)-fluxleft)+lambda*(a_j_plus_half(1)*(alphag(2)-alphag(1))-a_j_minus_half(1)*(alphag(1)-alphagLeft));
-  alphag(end)=alphag(end)-lambda*(fluxright-flux(end-1))+lambda*(a_j_plus_half(end)*(alphagRight-alphag(end))-a_j_minus_half(end)*(alphag(end)-alphag(end-1)));
+  if 0
   
+    % Rosunov scheme for non boundary cells
+    alphag(2:end-1)=alphag(2:end-1)-lambda/2*(flux(3:end)-flux(1:end-2))+1/2*lambda*(a_j_plus_half(2:end-1).*(alphag(3:end)-alphag(2:end-1))-a_j_minus_half(2:end-1).*(alphag(2:end-1)-alphag(1:end-2)));
+    
+    % BC's
+    alphag(1)=alphag(1)-lambda*(flux(2)-fluxleft)+lambda*(a_j_plus_half(1)*(alphag(2)-alphag(1))-a_j_minus_half(1)*(alphag(1)-alphagLeft));
+    alphag(end)=alphag(end)-lambda*(fluxright-flux(end-1))+lambda*(a_j_plus_half(end)*(alphagRight-alphag(end))-a_j_minus_half(end)*(alphag(end)-alphag(end-1)));
+
+  else
+ 
+    [alphag,alphag]=Rusanov(alphag,alphag,flux,flux,a_j_minus_half,a_j_plus_half,0,0,dx,dt);	   
+
+  end
+
   % Calculation of mean velocity from alphag
-  Vm=V0.*(1-alphag(1:end)).*alphag(1:end).*(rhog./rhom-1);  
+  Vm=V0.*(1-alphag.internal(1:end)).*alphag.internal(1:end).*(rhog./rhom.internal-1);  
   
   if 0
   

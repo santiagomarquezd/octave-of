@@ -33,6 +33,7 @@ function [a_j_minus_half,a_j_plus_half]=aspeedFullAlphaEqn(alphag,rhol,rhog,V0)
 	  
 	aLeft=a(1);
 	aRight=a(end);
+	
 	% a is turned back to internal values only
 	a=a(2:end-1);
     

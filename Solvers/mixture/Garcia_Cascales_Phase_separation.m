@@ -54,7 +54,7 @@ stopCorr=3;
 fullVerbose=0;  %1: enable, 0:disabled
 
 % Problema initialization
-initia=0; % 1: initialization, 0: run from dump data
+initia=1; % 1: initialization, 0: run from dump data
 
 % ********************* NUMERICAL PRE-PROCESSING ***********************
 

@@ -1,7 +1,7 @@
 function [out]=setBC(in,rho,xC,xF,g)
   % Evaluate BC's 
   %
-  % [out]=setBC(in)
+  % [out]=setBC(in,rho,xC,xF,g)
   %
   % out: field with evaluated BC's
   % in: field without evaluated BC's
