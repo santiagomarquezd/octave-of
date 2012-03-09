@@ -1,5 +1,5 @@
 function [eigens]=aspeed(U,alphag,rhol,rhog,N)
-    % Gives the max eigenvalues at interfaces for 
+    % Gives the max of |eigenvalues| at interfaces for 
     % Kurganov and Tadmor's kind of schemes
     % in simplified mixture problem (no Vr, no dp/dx)
     %
