@@ -4,23 +4,58 @@ if (fullVerbose==1)
 end
 
 %if (corr<4)
-rUA.internal = 1./Aop(UEqnM, V);
-rUA.left.type='V';
-rUA.left.value=rUA.internal(1);
-rUA.right.type='V';
-rUA.right.value=rUA.internal(end);
-rUA=setBC(rUA,constField(0,N),xC,xF,g);
 
-rUAf=fvc_interpolate(rhom,w,xC,xF).*fvc_interpolate(rUA,w,xC,xF);
+if 0
+  % REMINDER
+  % UEqnM=ddtM+convM;
+  % UEqnRHS=ddtRHS+convRHS+driftRHS;
 
+  rUA.internal = 1./Aop(UEqnM, V);
+  rUA.left.type='V';
+  rUA.left.value=rUA.internal(1);
+  rUA.right.type='V';
+  rUA.right.value=rUA.internal(end);
+  rUA=setBC(rUA,constField(0,N),xC,xF,g);
 
-U.internal = rUA.internal.*Hop(UEqnM, UEqnRHS, U, V);
-U=setBC(U,constField(0,N),xC,xF,g);
+  rUAf=fvc_interpolate(rhom,w,xC,xF).*fvc_interpolate(rUA,w,xC,xF);
+
+  U.internal = rUA.internal.*Hop(UEqnM, UEqnRHS, U, V);
+  U=setBC(U,constField(0,N),xC,xF,g);
+else
+  
+  rUA.internal = 1./Ap;
+  rUA.left.type='V';
+  rUA.left.value=rUA.internal(1);
+  rUA.right.type='V';
+  rUA.right.value=rUA.internal(end);
+  rUA=setBC(rUA,constField(0,N),xC,xF,g);
+
+  rUAf=fvc_interpolate(rhom,w,xC,xF).*fvc_interpolate(rUA,w,xC,xF);
+
+  % Explicit version of H opeator (feedback by U like in OpenFOAM) 
+  cFluxU=rhomPhiStill.*fvc_interpolate(U, w, xC, xF);
+  % cFluxU=rhomPhi.*fvc_interpolate(U, w, xC, xF);    
+  SU=drift;
+  dummy=alphag;
+  [U,dummy]=Rusanov(U0,dummy,fluxU,fluxAlpha,cFluxU,cFluxAlpha,a_j_minus_half,a_j_plus_half,SU,0,rhom0,rhom,dx,dt);  
+
+end
 
 phiC = fvc_ddtPhiCorrection(U0, rhomPhi0, rUA, rUAf, rhom0, w, xC, xF, Sf, dt);
-%keyboard; pause;
 
-rhomPhi = fvc_interpolate(rhom,w,xC,xF).*((fvc_interpolate(U,w,xC,xF).*Sf)+phiC);
+if 0
+  % Biased interpolation for Rusanov scheme
+  % Internal faces
+  phiU=(U.internal(2:end).^2+U.internal(1:end-1).^2)./(U.internal(2:end)+U.internal(1:end-1)+1E8);
+  phiU=[(U.internal(1)^2+U.left.setvalue^2)./(U.left.setvalue+U.internal(1)+1E8);phiU;(U.internal(end)^2+U.right.setvalue^2)./(U.right.setvalue+U.internal(end)+1E8)];
+  phiU=phiU.*Sf;
+else
+  % Standard centered interpolation like in FOAM
+  phiU=fvc_interpolate(U,w,xC,xF).*Sf;
+end
+
+rhomPhi = fvc_interpolate(rhom,w,xC,xF).*(phiU+phiC);
+
 
 %if (step<timesteps || corr<stopCorr)
 

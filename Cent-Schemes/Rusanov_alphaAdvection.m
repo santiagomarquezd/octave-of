@@ -26,10 +26,10 @@ alphagRight=1;
 dt=0.001;
 
 % Number of timesteps
-timesteps=5000; %100;
+timesteps=1; %100;
 
 % Number of cells
-N=1000;
+N=100;
 
 % Numerical Pre-processing
 
@@ -58,30 +58,59 @@ flux.left.value=0;
 flux.right.type='V';
 flux.right.value=0;
 
+dummyRho=constField(1,N);
+
+% Vm and Vdrp allocation
+Vm=flux;
+Vdrp=flux;
+
 % Temporal loop
 for i=1:timesteps
 
   % Prints the actual iteration
-  i
+  %i
   
+    if 0
+      % Rusanov scheme
+      % u_j^(n+1)=u_j^n-lambda/2*(f(u_(j+1)^n)-f(u_(j-1)^n))+1/2*(lambda*a_(j+1/2)^n*(u_(j+1)^n-u_j^n)-lambda*a_(j-1/2)^n*(u_j^n-u_(j-1)^n))   
+
+      % Flux evaluation (remember that it is a cell flux, flux at boundaries are stored in BC's)
       
-    % Rusanov scheme
-    % u_j^(n+1)=u_j^n-lambda/2*(f(u_(j+1)^n)-f(u_(j-1)^n))+1/2*(lambda*a_(j+1/2)^n*(u_(j+1)^n-u_j^n)-lambda*a_(j-1/2)^n*(u_j^n-u_(j-1)^n))   
+      % rhom field
+      rhom=assign(assign(alphag,constField(rhog,N),'*'),assign(assign(constField(1,N),alphag,'-'),constField(rhol,N),'*'),'+');
+      rhom=setBC(rhom,constField(0,N),xC,xF,0);
 
-    % Flux evaluation (remember that it is a cell flux, flux at boundaries are stored in BC's)
-    
-    % rhom field
-    rhom=assign(assign(alphag,constField(rhog,N),'*'),assign(assign(constField(1,N),alphag,'-'),constField(rhol,N),'*'),'+');
-    rhom=setBC(rhom,constField(0,N),xC,xF,0);
+      flux.internal=(V0.*(1-alphag.internal(1:end)).*(1-alphag.internal(1:end).*rhog./rhom.internal)+V0.*(1-alphag.internal(1:end)).*alphag.internal(1:end).*(rhog./rhom.internal-1)).*alphag.internal(1:end);
 
-    flux.internal=(V0.*(1-alphag.internal(1:end)).*(1-alphag.internal(1:end).*rhog./rhom.internal)+V0.*(1-alphag.internal(1:end)).*alphag.internal(1:end).*(rhog./rhom.internal-1)).*alphag.internal(1:end);
+      flux.left.value=(V0*(1-alphag.left.setvalue)*(1-alphag.left.setvalue*rhog/rhom.left.setvalue)+V0*(1-alphag.left.setvalue)*alphag.left.setvalue.*(rhog/rhom.left.setvalue-1))*alphag.left.setvalue;
+      
+      flux.right.value=(V0*(1-alphag.right.setvalue)*(1-alphag.right.setvalue*rhog/rhom.right.setvalue)+V0*(1-alphag.right.setvalue)*alphag.right.setvalue.*(rhog/rhom.right.setvalue-1)).*alphag.right.setvalue;
+      
+      flux=setBC(flux,constField(0,N),xC,xF,0);
+    
+  else
 
-    flux.left.value=(V0*(1-alphag.left.setvalue)*(1-alphag.left.setvalue*rhog/rhom.left.setvalue)+V0*(1-alphag.left.setvalue)*alphag.left.setvalue.*(rhog/rhom.left.setvalue-1))*alphag.left.setvalue;
-    
-    flux.right.value=(V0*(1-alphag.right.setvalue)*(1-alphag.right.setvalue*rhog/rhom.right.setvalue)+V0*(1-alphag.right.setvalue)*alphag.right.setvalue.*(rhog/rhom.right.setvalue-1)).*alphag.right.setvalue;
-    
-    flux=setBC(flux,constField(0,N),xC,xF,0);
-    
+      % rhom field
+      rhom=assign(assign(alphag,constField(rhog,N),'*'),assign(assign(constField(1,N),alphag,'-'),constField(rhol,N),'*'),'+');
+      rhom=setBC(rhom,constField(0,N),xC,xF,0);
+  
+      % Velocities actualization
+      Vm.internal=V0.*(1-alphag.internal(1:end)).*alphag.internal(1:end).*(rhog./rhom.internal-1);  
+      Vm=setBC(Vm,constField(0,N),xC,xF,0);
+
+      % Calculation of drift velocity from alphag
+      Vdrp.internal=V0.*(1-alphag.internal(1:end)).*(1-alphag.internal(1:end).*rhog./rhom.internal);  
+      Vdrp=setBC(Vdrp,constField(0,N),xC,xF,0);  
+
+      % Flux evaluation (remember that it is a cell flux, flux at boundaries are stored in BC's)
+  
+      flux=assign(assign(Vm,Vdrp,'+'),alphag,'*');
+   
+      flux=setBC(flux,constField(0,N),xC,xF,0);
+
+  end
+
+      cflux=zeros(N+1,1);
 
   if 0  
        
@@ -124,12 +153,13 @@ for i=1:timesteps
 
   else
  
-    [alphag,alphag]=Rusanov(alphag,alphag,flux,flux,a_j_minus_half,a_j_plus_half,0,0,dx,dt);	   
+    [alphag,alphag]=Rusanov(alphag,alphag,flux,flux,cflux,cflux,a_j_minus_half,a_j_plus_half,0,0,dummyRho,dummyRho,dx,dt);	   
+    %[alphag,alphag]=Rusanov(u1_0,u2_0,flux1,flux2,cflux1,cflux2,a_j_minus_half,a_j_plus_half,S1,S2,rhom0,rhom,dx,dt)
 
   end
 
   % Calculation of mean velocity from alphag
-  Vm=V0.*(1-alphag.internal(1:end)).*alphag.internal(1:end).*(rhog./rhom.internal-1);  
+  %Vm=V0.*(1-alphag.internal(1:end)).*alphag.internal(1:end).*(rhog./rhom.internal-1);  
   
   if 0
   

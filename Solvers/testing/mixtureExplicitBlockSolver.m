@@ -1,4 +1,5 @@
-% Solves an 1D Mixture Model problem like OpenFOAM
+% Solves an 1D Mixture Model problem using Riemannn-free solvers for the
+% U-alpha block
 
 %function mixtureSolver
 
@@ -49,27 +50,43 @@ if 1 % Enables temporal loop
 for step=1:timesteps
   fprintf('**************** Starting timestep: %d ****************\n',step)
 
-  % Mixture equation solution
-  rhoEqn
-
-  %keyboard; pause;
+  % Mixture density equation solution
+  %rhoEqn
  
   % Drift velocity calculation
   calcVdrp
 
-  %alphaEqnIshii
+  if 1
 
-  % UEqn
-  UEqn
+    % UEqn and alphagEqn block solving via Rusanov scheme
+    % Temporal advancement via Rusanov scheme for U (momentum predictor) and alphag
+    if 1
+      % Alphag advection like Ishii
+      AlphagUBlock
+    else
+      % alphag and rhom constitutive equation version
+      alphagUBlock
+    end
 
-  % alphaEqn
-  %alphaEqn
-  alphaEqnIshii
+  else
+    % Traditional mixtureSolver version
+  
+    % UEqn
+    UEqn
+
+    % alphaEqn
+    alphaEqnIshii
+  end
 
   %PISO loop
-  if 1  
+  if 1
     for corr=1:nCorr
-      pEqn
+      if 1
+	rhomPhiStill=rhomPhi;
+	pEqnExplicitBlock
+      else
+	pEqn    
+      end
     end
   end
 
@@ -88,21 +105,21 @@ end
 
 end % Ends condition for temporal loop
 
-save -binary dump.dat rhom0 rhom alphag0 alphag U0 U rhomPhi0 rhomPhi Alphag0 Alphag
+save -binary dump.dat rhom0 rhom alphag0 alphag U0 U rhomPhi0 rhomPhi Alphag Alphag0
 
 %end % End function mixtureSolver
 
-if 0
-  temporal=fvc_ddt(assign(U,rhom,'*'), assign(U0bak,rhom0bak,'*'), dt);
-  convec=fvc_div_face(rhomPhi,V);
-  drift=fvc_div_cell(arg, w, xC, xF, Sf, V);
-  volumetric=fvc_reconstruct((-ghf.*fvc_snGrad(rhom,xC,xF)-fvc_snGrad(p_rgh,xC,xF)).*Sf,Sf);
-else
-  temporal=ddtM*UmomPred.internal-ddtRHS;
-  convec=convM*UmomPred.internal-convRHS;
-  drift=driftRHS;
-  volumetric=volRHS;
-  residual=temporal+convec-drift-volumetric;
-end
+%  if 0
+%    temporal=fvc_ddt(assign(U,rhom,'*'), assign(U0bak,rhom0bak,'*'), dt);
+%    convec=fvc_div_face(rhomPhi,V);
+%    drift=fvc_div_cell(arg, w, xC, xF, Sf, V);
+%    volumetric=fvc_reconstruct((-ghf.*fvc_snGrad(rhom,xC,xF)-fvc_snGrad(p_rgh,xC,xF)).*Sf,Sf);
+%  else
+%    temporal=ddtM*UmomPred.internal-ddtRHS;
+%    convec=convM*UmomPred.internal-convRHS;
+%    drift=driftRHS;
+%    volumetric=volRHS;
+%    residual=temporal+convec-drift-volumetric;
+%  end
 
 
