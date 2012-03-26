@@ -1,7 +1,7 @@
 
 % Domain extension
 xleft=0;
-xright=1;
+xright=7.5;%1;
 
 % Cross sectional areas
 S=1; %0.02;
@@ -16,16 +16,16 @@ g=-10;
 % Relative velocity model (1: UADE, 2: Schiller-Naumann)
 VpqModel=1;
 % UADE model Vpq=V0.*((alphaMax-min(alpha.internal,alphaMax))/alphaMax).^a
-V0=0.282;
+V0=12;%0.282;
 alphaMax=1;
 aexp=1;
 
 % Initial values
-alphag0=0.5;
+alphag0=0.2;
 
 % Numerical parameters
 % Time-step
-dt=0.001;%0.141843971631206/10; %0.141843971631206/10; %0.00001;
+dt=0.0001;%0.141843971631206/10; %0.141843971631206/10; %0.00001;
 
 % Number of timesteps
 timesteps=4000;
@@ -42,10 +42,10 @@ nNonOrthCorr=1;
 % Discretization scheme for alpha divergence term
 alphaDiv=1; %2;
 % Explicit solution of alpha equation
-alphaExplicit=1; %1: explicit, 0: implicit
+alphaExplicit=0; %1: explicit, 0: implicit
 
 % Number of cells
-N=100; %6;
+N=500; %6;
 
 % Number of PISO correction in the last timestep
 stopCorr=3; 
