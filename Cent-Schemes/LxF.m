@@ -1,7 +1,7 @@
 function [u1,u2]=LxF(u1_0,u2_0,flux1,flux2,dx,dt)
     % Applies the Lax-Friederichs scheme given actual state and fluxes
     %
-    % [flux1,flux2]=no_Vr_cell_flux(U,alphag,rhom)
+    % [u1,u2]=LxF(u1_0,u2_0,flux1,flux2,dx,dt)
     %
     % u1,u2: new states for u1 and u2
     % u1_0,u2_0: previous states for u1 and u2

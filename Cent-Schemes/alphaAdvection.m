@@ -1,4 +1,5 @@
-% Solves alpha advection equation problem by Rosunov's Method
+% Solves alpha advection equation for Mixture Model by by Rosunov's and Lax
+% Friederichs Methods
 % du/dt+d/dx[F(u)]=0; F(u)=(V0*(1-alphag)*(1-alphag*rhog/rhom)+
 % V0*(1-alphag)*alphag*(rhog/rhom-1))*alphag
 
@@ -10,12 +11,12 @@ page_screen_output(0);
 % Physical paramaters
 rhog=1;
 rhol=1000;
-V0=0.282;
+V0=2.75*4;%0.282;
 alphag0=0.5; %0.5;
 
 % Domain extension
 xleft=0;
-xright=1;
+xright=7.5;
 
 
 % BC's
@@ -23,13 +24,13 @@ alphagLeft=0;
 alphagRight=1;
 
 % Time-step
-dt=0.001;
+dt=0.0001;
 
 % Number of timesteps
-timesteps=1; %100;
+timesteps=25*1000; %100;
 
 % Number of cells
-N=100;
+N=1000;
 
 % Numerical Pre-processing
 
@@ -42,12 +43,27 @@ lambda=dt/dx;
 
 % Fields initialization
 % alphag
-% alphag=ones(N,1)*alphag0;
-alphag.internal=ones(N,1)*alphag0;
-alphag.left.type='V';
-alphag.left.value=alphagLeft;
-alphag.right.type='V';
-alphag.right.value=alphagRight;
+if 0
+  % Fixed value BC's  
+  alphag.internal=ones(N,1)*alphag0;
+  alphag.left.type='V';
+  alphag.left.value=alphagLeft;
+  alphag.right.type='V';
+  alphag.right.value=alphagRight;
+else
+  % Zero gradient BC's  
+  alphag.internal=ones(N,1)*alphag0;
+  alphag.left.type='G';
+  alphag.left.gradient=0;
+  alphag.right.type='G';
+  alphag.right.gradient=0;
+end
+
+if 1
+  % Shock initialization
+  alphag.internal(1)=0;
+  alphag.internal(end)=1;
+end
 
 alphag=setBC(alphag,constField(0,N),xC,xF,0);
 
@@ -68,7 +84,7 @@ Vdrp=flux;
 for i=1:timesteps
 
   % Prints the actual iteration
-  %i
+  i
   
     if 0
       % Rusanov scheme
@@ -152,9 +168,14 @@ for i=1:timesteps
     alphag(end)=alphag(end)-lambda*(fluxright-flux(end-1))+lambda*(a_j_plus_half(end)*(alphagRight-alphag(end))-a_j_minus_half(end)*(alphag(end)-alphag(end-1)));
 
   else
- 
-    [alphag,alphag]=Rusanov(alphag,alphag,flux,flux,cflux,cflux,a_j_minus_half,a_j_plus_half,0,0,dummyRho,dummyRho,dx,dt);	   
-    %[alphag,alphag]=Rusanov(u1_0,u2_0,flux1,flux2,cflux1,cflux2,a_j_minus_half,a_j_plus_half,S1,S2,rhom0,rhom,dx,dt)
+
+    if 0
+      % Using Rusanov scheme
+      [alphag,alphag]=Rusanov(alphag,alphag,flux,flux,cflux,cflux,a_j_minus_half,a_j_plus_half,0,0,dummyRho,dummyRho,dx,dt);
+    else
+      % Using Lax-Friederichs scheme
+      [alphag,alphag]=LxF(alphag,alphag,flux,flux,dx,dt);
+    end
 
   end
 

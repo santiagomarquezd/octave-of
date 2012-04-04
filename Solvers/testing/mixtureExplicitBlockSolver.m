@@ -11,7 +11,7 @@ page_screen_output(0);
   %tubopasanteSaltoAlphag
   %tubopasanteSaltoV
   %tubopasanteMomCteVmayorInit
-  Garcia_Cascales_Phase_separation
+  Phase_separation
 
 % **************************** MAIN PROGRAM ***************************
 
@@ -51,13 +51,12 @@ for step=1:timesteps
   fprintf('**************** Starting timestep: %d ****************\n',step)
 
   % Mixture density equation solution
-  %rhoEqn
+  rhoEqn
  
   % Drift velocity calculation
   calcVdrp
 
-  if 1
-
+  if 0
     % UEqn and alphagEqn block solving via Rusanov scheme
     % Temporal advancement via Rusanov scheme for U (momentum predictor) and alphag
     if 1
@@ -67,6 +66,16 @@ for step=1:timesteps
       % alphag and rhom constitutive equation version
       alphagUBlock
     end
+  elseif 1
+    % Usual calculus for U, Riemmann free for Alpha
+
+    %disp('Hola')
+
+    % UEqn
+    UEqn
+  
+    % alphaEqn
+    AlphaRF
 
   else
     % Traditional mixtureSolver version
@@ -76,15 +85,17 @@ for step=1:timesteps
 
     % alphaEqn
     alphaEqnIshii
-  end
+  
+    end
 
   %PISO loop
   if 1
     for corr=1:nCorr
-      if 1
+      if 0
 	rhomPhiStill=rhomPhi;
 	pEqnExplicitBlock
       else
+	% Traditional PISO
 	pEqn    
       end
     end

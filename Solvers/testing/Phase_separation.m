@@ -1,7 +1,7 @@
 
 % Domain extension
 xleft=0;
-xright=7.5;%1;
+xright=1;
 
 % Cross sectional areas
 S=1; %0.02;
@@ -16,19 +16,19 @@ g=-10;
 % Relative velocity model (1: UADE, 2: Schiller-Naumann)
 VpqModel=1;
 % UADE model Vpq=V0.*((alphaMax-min(alpha.internal,alphaMax))/alphaMax).^a
-V0=2.75*4;%0.282;
+V0=0.282;
 alphaMax=1;
 aexp=1;
 
 % Initial values
-alphag0=0.2;
+alphag0=0.5;
 
 % Numerical parameters
 % Time-step
-dt=0.0001;%0.141843971631206/10; %0.141843971631206/10; %0.00001;
+dt=0.001;%0.141843971631206/10; %0.141843971631206/10; %0.00001;
 
 % Number of timesteps
-timesteps=5000;
+timesteps=1000;
 
 % Numerical diffusivity for stabilization multiplier
 mult=1;    %nu=mult*1/2*mean(abs(U)+abs(Vpq))*mean(dx)*ones(size(rhomPhi));
@@ -45,7 +45,7 @@ alphaDiv=1; %2;
 alphaExplicit=0; %1: explicit, 0: implicit
 
 % Number of cells
-N=1000; %6;
+N=100; %6;
 
 % Number of PISO correction in the last timestep
 stopCorr=3; 
