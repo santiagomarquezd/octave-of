@@ -3,6 +3,10 @@ if (fullVerbose==1)
   printf('PISO correction number:%d\n',corr)
 end
 
+%hold on;plot(xC,U.internal,'m');
+
+%keyboard; pause;
+
 %if (corr<4)
 rUA.internal = 1./Aop(UEqnM, V);
 rUA.left.type='V';
@@ -18,7 +22,6 @@ U.internal = rUA.internal.*Hop(UEqnM, UEqnRHS, U, V);
 U=setBC(U,constField(0,N),xC,xF,g);
 
 phiC = fvc_ddtPhiCorrection(U0, rhomPhi0, rUA, rUAf, rhom0, w, xC, xF, Sf, dt);
-%keyboard; pause;
 
 rhomPhi = fvc_interpolate(rhom,w,xC,xF).*((fvc_interpolate(U,w,xC,xF).*Sf)+phiC);
 
@@ -27,6 +30,8 @@ rhomPhi = fvc_interpolate(rhom,w,xC,xF).*((fvc_interpolate(U,w,xC,xF).*Sf)+phiC)
 rhomPhiU=rhomPhi;
 
 rhomPhi -= ghf.*fvc_snGrad(rhom,xC,xF).*rUAf.*Sf;
+
+
 
 % This line has been added but it isn't in original code
 % rhomPhi(end)=0;
@@ -40,6 +45,9 @@ for nonOrth=1:nNonOrthCorr
       disp('Assembling p_rghEqn')
     end
     [p_rghM, p_rghRHS]=fvm_laplacian(p_rgh,rUAf,xC,xF,Sf);
+
+    AA=fvc_ddt(rhom, rhom0, dt);
+    BB=fvc_div_face(rhomPhi,V);
 
     % Calculating explicit terms (to RHS)
     ERHS=(fvc_ddt(rhom, rhom0, dt)+fvc_div_face(rhomPhi,V)).*V;
@@ -95,9 +103,11 @@ rhoEqn
 % #include "mixtureContinuityErrs.H"       ---------------->>>>>>>> COMPLETAR
 
 if 1
-U.internal+=rUA.internal.*fvc_reconstruct((rhomPhi - rhomPhiU)./rUAf,Sf);
-U=setBC(U,constField(0,N),xC,xF,g);
+  U.internal+=rUA.internal.*fvc_reconstruct((rhomPhi - rhomPhiU)./rUAf,Sf);
+  U=setBC(U,constField(0,N),xC,xF,g);
 end
+
+%keyboard; pause;
 
 end % End of conditional part of code
 

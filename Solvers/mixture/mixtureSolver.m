@@ -10,7 +10,8 @@ page_screen_output(0);
   %tubopasanteSaltoAlphag
   %tubopasanteSaltoV
   %tubopasanteMomCteVmayorInit
-  Garcia_Cascales_Phase_separation
+  %Garcia_Cascales_Phase_separation
+  Phase_separation
 
 % **************************** MAIN PROGRAM ***************************
 
@@ -52,10 +53,8 @@ for step=1:timesteps
   % Mixture equation solution
   rhoEqn
 
-  %keyboard; pause;
- 
   % Drift velocity calculation
-  calcVdrp
+  calcVdrp  
 
   %alphaEqnIshii
 
@@ -65,6 +64,7 @@ for step=1:timesteps
   % alphaEqn
   %alphaEqn
   alphaEqnIshii
+ 
 
   %PISO loop
   if 1  
@@ -74,6 +74,8 @@ for step=1:timesteps
   end
 
 %if (step<timesteps)
+
+  %keyboard; pause;
 
   % Set fields as 'old' states
   rhom0bak=rhom0; % For time derivative processing

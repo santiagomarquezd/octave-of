@@ -17,10 +17,15 @@ Alphag0=setBC(Alphag0,rhom,xC,xF,g);
 
 % alphaEqn
 phiAlpha=rhomPhi;
-%phiVdrp=fvc_interpolate(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'), w, xC, xF).*Sf;
-directionFlux=fvc_interpolate(Vpq, w, xC, xF);
-directionFlux=sign(directionFlux(2:end-1,1)+1E-9);
-phiVdrp=fvc_general_interpolate(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'), xC, xF,1,directionFlux).*Sf;
+if 1
+  % UADE stabilization
+  directionFlux=fvc_interpolate(Vpq, w, xC, xF);
+  directionFlux=sign(directionFlux(2:end-1,1)+1E-9);
+  phiVdrp=fvc_general_interpolate(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'), xC, xF,1,directionFlux).*Sf;
+else
+  % FOAM original
+  phiVdrp=fvc_interpolate(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'), w, xC, xF).*Sf;
+end
 phiAlpha+=phiVdrp;
 
 
@@ -104,4 +109,4 @@ else
   rhom=setBC(rhom,constField(0,N),xC,xF,g);
 end
 
-
+%load densities.dat

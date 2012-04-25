@@ -7,8 +7,10 @@ xright=1;
 S=1; %0.02;
 
 % Physical paramaters
+nul=1E-6;
 rhol=1000;
 mul=0.001;
+nug=1E-5;
 rhog=1; %930; %1;
 dp=0.005; % 
 g=-10;
@@ -28,10 +30,13 @@ alphag0=0.5;
 dt=0.001;%0.141843971631206/10; %0.141843971631206/10; %0.00001;
 
 % Number of timesteps
-timesteps=1000;
+timesteps=2000;
 
-% Numerical diffusivity for stabilization multiplier
-mult=1;    %nu=mult*1/2*mean(abs(U)+abs(Vpq))*mean(dx)*ones(size(rhomPhi));
+% Numerical diffusivity for stabilization multiplier in Alpha Equation
+mult=0; %1    %nu=mult*1/2*mean(abs(U)+abs(Vpq))*mean(dx)*ones(size(rhomPhi));
+
+% Multiplier for Numerical diffusivity in U Equation stabilization
+multU=1;
 
 % PISO corrections
 nCorr=3;
@@ -81,8 +86,13 @@ w=weights(xC, xF);
 U.internal=0*ones(N,1)*-V0/4;
 U.left.type='V';
 U.left.value=0;
-U.right.type='V';
-U.right.value=0;
+if 0
+  U.right.type='V';
+  U.right.value=0;
+else
+  U.right.type='G';
+  U.right.gradient=0;
+end
 % Detailed initialization
 %U.internal(end-3:end)=0;
 %U.right.gradient=0;

@@ -50,7 +50,8 @@
 
     fluxAlpha=assign(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'),Alphag0,'*');
     fluxAlpha=setBC(fluxAlpha,constField(0,N),xC,xF,0);
-    cFluxAlpha=rhomPhi.*fvc_interpolate(Alphag0, w, xC, xF)*0;
+    
+    %cFluxAlpha=rhomPhi.*fvc_interpolate(Alphag0, w, xC, xF)*0;
     %cFluxAlpha=fvc_interpolate(assign(assign(rhom,Vm,'*'),Alphag0,'*'), w, xC, xF);	
     
     % U flux [(rhom*U)_f*Sf_*interpolate(U)]. All the flux is in cFluxU

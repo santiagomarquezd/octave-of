@@ -56,6 +56,8 @@ for step=1:timesteps
   % Drift velocity calculation
   calcVdrp
 
+  %keyboard; pause;
+
   if 0
     % UEqn and alphagEqn block solving via Rusanov scheme
     % Temporal advancement via Rusanov scheme for U (momentum predictor) and alphag
@@ -73,9 +75,12 @@ for step=1:timesteps
 
     % UEqn
     UEqn
+    %UEqnVisco
   
     % alphaEqn
     AlphaRF
+
+    %UEqn
 
   else
     % Traditional mixtureSolver version
@@ -86,7 +91,7 @@ for step=1:timesteps
     % alphaEqn
     alphaEqnIshii
   
-    end
+  end
 
   %PISO loop
   if 1
@@ -102,6 +107,8 @@ for step=1:timesteps
   end
 
 %if (step<timesteps)
+
+  %keyboard; pause;
 
   % Set fields as 'old' states
   rhom0bak=rhom0; % For time derivative processing

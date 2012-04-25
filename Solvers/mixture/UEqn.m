@@ -36,6 +36,8 @@ U.internal=UEqnM\(UEqnRHS+volRHS);
 % U from momentum predictor is stored for debugging purposes
 UmomPred=U;
 
+%keyboard; pause;
+
 % U bounding
 if 0
 U=bound(U,'min',0);
@@ -44,3 +46,4 @@ U=setBC(U,rhom,xC,xF,g);
 end
 
 %keyboard; pause;
+%hold on;plot(xC,U.internal,'g*-');

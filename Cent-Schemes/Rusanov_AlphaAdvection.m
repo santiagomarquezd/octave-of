@@ -108,7 +108,7 @@ fullVerbose=0;  %1: enable, 0:disabled
 for i=1:timesteps
 
   % Prints the actual iteration
-  %i
+  i
 
     % rhomPhi field calculation from Vm and rhom fields
     % Creation of flux direction
@@ -165,10 +165,10 @@ for i=1:timesteps
   
     if 0
   
-      figure(1); plot(xC,alphag);
+      figure(1); plot(xC,alphag.internal);
       figure(2); plot(eig1);
       figure(3); plot(eig2);
-      figure(4); plot(xC,Vm);
+      figure(4); plot(xC,Vm.internal);
   
     end
 

@@ -11,14 +11,13 @@
 
   % Time advancement
   if 0
-    % Non-conservative
-
+    % Fully-conservative non using the flux given by PISO
     % AlphaFlux
     fluxAlpha=assign(assign(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'),assign(U,rhom,'*'),'+'),Alphag0,'*');
     fluxAlpha=setBC(fluxAlpha,constField(0,N),xC,xF,0);
     cFluxAlpha=rhomPhi*0;
     [Alphag,Alphag]=Rusanov(Alphag0,Alphag0,fluxAlpha,fluxAlpha,cFluxAlpha,cFluxAlpha,a_j_minus_half,a_j_plus_half,0,0,rhom0,rhom,dx,dt);
-  else
+  elseif 1
     % Quasi-conservative, rhomPhi is used instead of creating it
 
     % AlphaFlux (only relative velocity part, Um flux is taken from PISO)
@@ -34,10 +33,24 @@
 
     fluxAlpha=assign(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'),Alphag0,'*');
     fluxAlpha=setBC(fluxAlpha,constField(0,N),xC,xF,0);
-    cFluxAlpha=rhomPhi.*fvc_interpolate(Alphag0, w, xC, xF)*0;
-    %cFluxAlpha=fvc_interpolate(assign(assign(rhom,Vm,'*'),Alphag0,'*'), w, xC, xF);	
 
-    [Alphag,Alphag]=Rusanov(Alphag0,Alphag0,fluxAlpha,fluxAlpha,cFluxAlpha,cFluxAlpha,a_j_minus_half,a_j_plus_half,0,0,rhom0,rhom,dx,dt);  
+    if 0
+      cFluxAlpha=rhomPhi.*fvc_interpolate(Alphag0, w, xC, xF);
+      % cFluxAlpha=fvc_interpolate(assign(assign(rhom,Vm,'*'),Alphag0,'*'), w, xC, xF);	
+      [Alphag,Alphag]=Rusanov(Alphag0,Alphag0,fluxAlpha,fluxAlpha,cFluxAlpha,cFluxAlpha,a_j_minus_half,a_j_plus_half,0,0,rhom0,rhom,dx,dt);  
+    else
+      cFluxAlpha=rhomPhi;
+      [Alphag]=MarquezNigro(Alphag0,Alphag0,fluxAlpha,fluxAlpha,cFluxAlpha,cFluxAlpha,a_j_minus_half,a_j_plus_half,0,0,rhom0,rhom,w,xC,xF,dx,dt);
+    end
+  else
+    %disp('Hola')
+    % Non conservative downwind flux for Vdrp (the main idea is testing wheter the problem is in U stabilization or Vdrp)
+    fluxAlpha=assign(assign(U,rhom,'*'),Alphag0,'*');
+    fluxAlpha=setBC(fluxAlpha,constField(0,N),xC,xF,0);
+    directionFlux=fvc_interpolate(Vpq, w, xC, xF);
+    directionFlux=sign(directionFlux(2:end-1,1)+1E-9);
+    cFluxAlpha=fvc_general_interpolate(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'), xC, xF,1,directionFlux).*Sf;
+    [Alphag,Alphag]=Rusanov(Alphag0,Alphag0,fluxAlpha,fluxAlpha,cFluxAlpha,cFluxAlpha,a_j_minus_half,a_j_plus_half,0,0,rhom0,rhom,dx,dt);
   end
 	  
   Alphag=setBC(Alphag,rhom,xC,xF,g);
@@ -60,5 +73,5 @@
     alphag=setBC(alphag,rhom,xC,xF,g);
   end
 
-
+  %load density.dat
   
