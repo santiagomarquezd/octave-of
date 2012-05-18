@@ -1,4 +1,4 @@
-function [u,v]=KT(u0,v0,uLimited,vLimited,ufluxfunction,vfluxfunction,a,dx,dt,Vr,rhol,rhog,model)
+function [u,v]=KT(u0,v0,uLimited,vLimited,ufluxfunction,vfluxfunction,a,dx,dt,V0,rhol,rhog,aexp)
     % Advances u and v fields in time by means of Kurganov & Tadmor scheme
     %
     % [u,v]=KT(uLimited,vLimited,ufluxfunction,vfluxfunction)
@@ -11,13 +11,13 @@ function [u,v]=KT(u0,v0,uLimited,vLimited,ufluxfunction,vfluxfunction,a,dx,dt,Vr
     % vLimited: limited values for u at actual tiem
     % ufluxfunction: flux function for u
     % vfluxfunction: flux function for v
-    % a: local velocities (eigenvalues)
+    % a: local velocities at interfaces (eigenvalues)
     % dx: spatial step
     % dt: time step
-    % Vr: relative velocity
+    % V0: constant for flux function
     % rhol: liquid density
     % rhog: gas density
-    % model: 1. No Vr; 2: with Vr
+    % aexp: exponent in advective velocity calculation
     
     % Allocation
     u=u0;
@@ -27,21 +27,25 @@ function [u,v]=KT(u0,v0,uLimited,vLimited,ufluxfunction,vfluxfunction,a,dx,dt,Vr
     lambda=dt/dx;
     
     % Star fluxes calculation (see http://en.wikipedia.org/wiki/MUSCL_scheme)
-    Fu_star_minus_half=1/2*(ufluxfunction(uLimited.u_i_m_h_r,vLimited.u_i_m_h_r,Vr,rhol,rhog,model)+...
-						ufluxfunction(uLimited.u_i_m_h_l,vLimited.u_i_m_h_l,Vr,rhol,rhog,model)-...
+    Fu_star_minus_half=1/2*(ufluxfunction(uLimited.u_i_m_h_r,V0,rhol,rhog,aexp)+
+						ufluxfunction(uLimited.u_i_m_h_l,V0,rhol,rhog,aexp)-...
 						a(1:end-1).*(uLimited.u_i_m_h_r-uLimited.u_i_m_h_l));
-    Fu_star_plus_half=1/2*(ufluxfunction(uLimited.u_i_p_h_r,vLimited.u_i_p_h_r,Vr,rhol,rhog,model)+...
-						ufluxfunction(uLimited.u_i_p_h_l,vLimited.u_i_p_h_l,Vr,rhol,rhog,model)-...
+    Fu_star_plus_half=1/2*(ufluxfunction(uLimited.u_i_p_h_r,V0,rhol,rhog,aexp)+...
+						ufluxfunction(uLimited.u_i_p_h_l,V0,rhol,rhog,aexp)-...
 						a(2:end).*(uLimited.u_i_p_h_r-uLimited.u_i_p_h_l));
-    Fv_star_minus_half=1/2*(vfluxfunction(uLimited.u_i_m_h_r,vLimited.u_i_m_h_r,Vr,rhol,rhog,model)+...
-						vfluxfunction(uLimited.u_i_m_h_l,vLimited.u_i_m_h_l,Vr,rhol,rhog,model)-...
+    Fv_star_minus_half=1/2*(vfluxfunction(vLimited.u_i_m_h_r,V0,rhol,rhog,aexp)+...
+						vfluxfunction(uLimited.u_i_m_h_l,V0,rhol,rhog,aexp)-...
 						a(1:end-1).*(vLimited.u_i_m_h_r-vLimited.u_i_m_h_l));
-    Fv_star_plus_half=1/2*(vfluxfunction(uLimited.u_i_p_h_r,vLimited.u_i_p_h_r,Vr,rhol,rhog,model)+...
-						vfluxfunction(uLimited.u_i_p_h_l,vLimited.u_i_p_h_l,Vr,rhol,rhog,model)-...
+    Fv_star_plus_half=1/2*(vfluxfunction(vLimited.u_i_p_h_r,V0,rhol,rhog,aexp)+...
+						vfluxfunction(uLimited.u_i_p_h_l,V0,rhol,rhog,aexp)-...
 						a(2:end).*(vLimited.u_i_p_h_r-vLimited.u_i_p_h_l));
-    
+    % Impermeable walls BC's
+    Fu_star_minus_half(1)=0;
+    Fu_star_plus_half(end)=0;
+    Fv_star_minus_half(1)=0;
+    Fv_star_plus_half(end)=0;
 
-	% Time advancement
-	u.internal=u0.internal-lambda*(Fu_star_plus_half-Fu_star_minus_half);
-	v.internal=v0.internal-lambda*(Fv_star_plus_half-Fv_star_minus_half);
+    % Time advancement
+    u.internal=u0.internal-lambda*(Fu_star_plus_half-Fu_star_minus_half);
+    v.internal=v0.internal-lambda*(Fv_star_plus_half-Fv_star_minus_half);
 end

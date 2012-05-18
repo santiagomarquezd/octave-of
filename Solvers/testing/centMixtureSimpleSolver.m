@@ -1,14 +1,12 @@
-% Solves an 1D Mixture Model using centered schemes for 
-% alpha and algebraic momentum equation
+% Solves alpha equation for 1D Mixture Model using centered schemes from
+% Kurganov and Tadmor with superbee reconstruction
 
 page_screen_output(0);
 
 % Initialization
 
-Garcia_Cascales_Phase_separation
-
-
-dx=xC(2)-xC(1);
+%Garcia_Cascales_Phase_separation
+Phase_separation
 
 % **************************** MAIN PROGRAM ***************************
 
@@ -16,33 +14,29 @@ dx=xC(2)-xC(1);
 for step=1:timesteps
   fprintf('**************** Starting timestep: %d ****************\n',step)
 
-    % Drift velocity calculation
-    % calcVdrp
-    calcVdrp
-
-    % U calculation from alphag
-    UEqnSimple
-
-    Vg=assign(U,Vdrp,'*');
-  
     % Limiting
     % Sweby's fuction calculation
     phiAlphag=superbee(rvalue(alphag,1E-9)); 
     % Limited values calculation
     [alphagLimited]=limitedValues(alphag,phiAlphag,dx,dt);
-    % Local velocities at interfaces
-    aeigens=simpleSpeed(V0, alphag,rhol, rhog, rhom, N);
+    if 0
+      % Old version
+      % Local velocities at interfaces
+      aeigens=simpleSpeed(V0, alphag,rhol, rhog, rhom, N);
+    else 
+      [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqnVm(alphag,rhol,rhog,V0,constField(0,N));  
+      % Stabilization flux has to be zero at boundaries too
+      a_j_minus_half(1)=0;
+      a_j_plus_half(end)=0;
+      % Flatten for KT function
+      aeigens=[a_j_minus_half; a_j_plus_half(end)];
+    end
+
     % Time advancement by Kurnanov & Tadmor's scheme
-    [alphagDummy,alphag]=KT(alphagh,alphag,alphagLimited,alphagLimited,@alphaSimpleFlux,@alphaSimpleFlux,aeigens,dx,dt,0,rhol,rhog,1);
-  end
+    [alphagDummy,alphag]=KT(alphag,alphag,alphagLimited,alphagLimited,@alphaEqnVmFluxFlat,@alphaEqnVmFluxFlat,aeigens,dx,dt,V0,rhol,rhog,aexp);
+  %end
   
-  % Mixture density actualization
-  rhom=assign(assign(alphag,constField(rhog,N),'*'),assign(assign(constField(1,N),alphag,'-'),constField(rhol,N),'*'),'+');
- 
-  % BC's actualization
-  U=setBC(U,constField(0,N),xC,xF,g);
   alphag=setBC(alphag,rhom,xC,xF,g);
-  %rhom=setBC(rhom,constField(0,N),xC,xF,g);
   
 end % Temporal loop
 

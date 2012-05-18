@@ -5,7 +5,7 @@ function [flux]=VmFlux(Vm,alphag,Vr,rhol,rhog,model)
     %
     % flux: obtained flux
     % Vm: mixture velocity
-	% alphag: alphag field
+    % alphag: alphag field
     % rhol: liquid density
     % rhog: gas density
     % model: 1. No Vr; 2: with Vr

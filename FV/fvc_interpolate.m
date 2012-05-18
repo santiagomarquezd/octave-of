@@ -1,7 +1,7 @@
 function [Uf]=fvc_interpolate(U, w, xC, xF)
     % Gives a face linear interpolated field from cell centered field
     % 
-    % [Uf]=fvm_interpolate(U, weights)
+    % [Uf]=fvm_interpolate(U, w, xC, xF)
     %
     % U: cell centered field
     % w: linear interpolation weights

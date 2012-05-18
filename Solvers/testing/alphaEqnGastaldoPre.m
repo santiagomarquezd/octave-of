@@ -1,3 +1,5 @@
+% Gastaldo's alphaEqn for pre PISO correction of alpha and rhom
+
 % Numerical diffusivity
 nu=mult*1/2*mean(abs(U.internal)+abs(Vpq.internal))*mean(dx)*ones(size(rhomPhi));
 
@@ -17,25 +19,6 @@ Alphag0=setBC(Alphag0,rhom,xC,xF,g);
 
 % alphaEqn
 phiAlpha=rhomPhi;
-if 1
-  % UADE stabilization
-  directionFlux=fvc_interpolate(Vpq, w, xC, xF);
-  directionFlux=sign(directionFlux(2:end-1,1)+1E-9);
-  phiVdrp=fvc_general_interpolate(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'), xC, xF,1,directionFlux).*Sf;
-else 
-  % UADE stabilization with full upwind/downwind
-  directionFlux=fvc_interpolate(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'), w, xC, xF)+phiAlpha;
-  directionFlux=sign(directionFlux(2:end-1,1)+1E-9);
-  phiVdrp=fvc_general_interpolate(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'), xC, xF,1,directionFlux).*Sf;
-end
-phiAlpha+=phiVdrp;
-
-if 0
-  % Impermeable walls test
-  phiAlpha(1)=0;
-  phiAlpha(end)=0;
-end
-
 
 if (alphaExplicit==0)
 
@@ -49,7 +32,7 @@ if (alphaExplicit==0)
 
   % Solve
   if (fullVerbose==1)
-    disp('Implicit solving of Alphag')
+    disp('Implicit solving of Alphag (pre-advancing)')
   end
   %  M=M+A+B;
   %  RHS=RHS+ARHS+BRHS;
@@ -65,15 +48,27 @@ elseif (alphaExplicit==1)
   directionFluxAG0=sign(phiAlpha(2:end-1,1)+1E-9);
   Alphag0Int=fvc_general_interpolate(Alphag0, xC, xF,-1,directionFluxAG0);
 
+%    if (initia==0)
+%  
+%      % Automatic calculation of timestep
+%      AlphagFinal=(1-alphag0.internal(end))*rhog/(rhol-(rhol/rhog-1))+Alphag0.internal(end);
+%  
+%      dt=-(AlphagFinal-Alphag0.internal(end)*rhom0.internal(end)./rhom.internal(end))*...
+%        dx*rhom.internal(end)/(phiAlpha(end)*Alphag0Int(end)-phiAlpha(end-1).*Alphag0Int(end-1))
+%  
+%    end
+
   % Solve
   if (fullVerbose==1)
-    disp('Explicit solving of Alphag')
+    disp('Explicit solving of Alphag (pre-advancing)')
   end	
 
   % Explicit solving for Alphag
   Alphag.internal(1:end)=Alphag0.internal(1:end).*rhom0.internal(1:end)./rhom.internal(1:end)-dt./dx*(phiAlpha(2:end).*...
   			 Alphag0Int(2:end)-phiAlpha(1:end-1).*Alphag0Int(1:end-1))./rhom.internal(1:end);
 
+%    alphag.internal(1:end)=alphag0.internal(1:end)-dt./dx*(phiAlpha(2:end).*...
+%    			 Alphag0Int(2:end)-phiAlpha(1:end-1).*Alphag0Int(1:end-1))./rhog;
 
 end
 
@@ -106,4 +101,3 @@ else
 end
 
 %load densities.dat
-rhomSave=rhom;

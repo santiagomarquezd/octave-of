@@ -15,6 +15,9 @@ page_screen_output(0);
 
 % **************************** MAIN PROGRAM ***************************
 
+% Array of matrices for FVS methods
+Aarray=zeros(2,2,N);
+
 % Gravity treatment terms
 ghf = g*xF;
 gh = g*xC;
@@ -69,7 +72,10 @@ for step=1:timesteps
       alphagUBlock
     end
   elseif 1
-    % Usual calculus for U, Riemmann free for Alpha
+    % Probar haciendo AlphaUBlock con Godunov y usando downwind arriba y centrado abajo a pata
+    % Probar el caso de Gastaldo con Vr=cte.
+
+    % Usual calculus for U, Riemmann free for Alpha/Godunov (Flux Vector Splitting) for Alpha
 
     %disp('Hola')
 
@@ -78,7 +84,9 @@ for step=1:timesteps
     %UEqnVisco
   
     % alphaEqn
-    AlphaRF
+    AlphaRF	% Stabilization with Rusanov-like scheme	
+    %AlphaTest % Upwind based in front velocities
+    %AlphaFVS 
 
     %UEqn
 

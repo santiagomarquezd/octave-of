@@ -6,8 +6,17 @@
   Alphag0=setBC(Alphag0,rhom,xC,xF,g);   
 
   % Face maximum for spectral radius specially tailored for this problem
-  [a_j_minus_half,a_j_plus_half]=aspeedFullAlphaEqn(alphag0,rhol,rhog,V0);
+  if 1
+    % U-alphag block
+    [a_j_minus_half,a_j_plus_half]=aspeedFullAlphaEqn(alphag0,rhol,rhog,V0);
+  else
+    % Isolated alpha equaation
+    [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqn(alphag,rhol,rhog,V0,U);
+  end
 
+  % Stabilization flux has to be zero at boundaries too (impermeable wall)
+  a_j_minus_half(1)=0;
+  a_j_plus_half(end)=0;  
 
   % Time advancement
   if 0
@@ -19,20 +28,15 @@
     [Alphag,Alphag]=Rusanov(Alphag0,Alphag0,fluxAlpha,fluxAlpha,cFluxAlpha,cFluxAlpha,a_j_minus_half,a_j_plus_half,0,0,rhom0,rhom,dx,dt);
   elseif 1
     % Quasi-conservative, rhomPhi is used instead of creating it
-
-    % AlphaFlux (only relative velocity part, Um flux is taken from PISO)
-    if 0
-      % Overrides rhomPhi flux from PISO by a local version based on Vm(alphag) calculation
-      % Full centered flux
-      Vm=U;
-      Vm.internal=V0.*(1-alphag.internal(1:end)).*alphag.internal(1:end).*(rhog./rhom.internal-1);
-      Vm=setBC(Vm,constField(0,N),xC,xF,0);
-      %rhomPhi=fvc_interpolate(assign(rhom,Vm,'*'), w, xC, xF);	
-      %rhomPhi=fvc_interpolate(rhom, w, xC, xF).*fvc_interpolate(Vm, w, xC, xF);	
-    end
-
-    fluxAlpha=assign(assign(rhom,assign(Vpq,arrayToField(1-cp),'*'),'*'),Alphag0,'*');
+    fluxAlpha=assign(assign(rhom0,assign(Vpq,arrayToField(1-cp),'*'),'*'),Alphag0,'*');
     fluxAlpha=setBC(fluxAlpha,constField(0,N),xC,xF,0);
+
+    % Ensure no fluxes at boundaries
+%      fluxAlpha.left.type='V';
+%      fluxAlpha.left.value=0;
+%      fluxAlpha.right.type='V';
+%      fluxAlpha.right.value=0;
+%      fluxAlpha=setBC(fluxAlpha,constField(0,N),xC,xF,0);
 
     if 0
       cFluxAlpha=rhomPhi.*fvc_interpolate(Alphag0, w, xC, xF);
@@ -42,6 +46,7 @@
       cFluxAlpha=rhomPhi;
       [Alphag]=MarquezNigro(Alphag0,Alphag0,fluxAlpha,fluxAlpha,cFluxAlpha,cFluxAlpha,a_j_minus_half,a_j_plus_half,0,0,rhom0,rhom,w,xC,xF,dx,dt);
     end
+
   else
     %disp('Hola')
     % Non conservative downwind flux for Vdrp (the main idea is testing wheter the problem is in U stabilization or Vdrp)
@@ -74,4 +79,5 @@
   end
 
   %load density.dat
+  rhomSave=rhom;
   

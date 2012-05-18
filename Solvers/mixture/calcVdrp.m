@@ -48,7 +48,7 @@ end
 Vpq=setBC(Vpq,rhom,xC,xF,g);
 
 % Mass fraction 23.4-10 from Fluent's User's Guide 
-cp=alphag.internal.*rhog./rhom.internal;
+cp=alphag.internal.*rhog./rhom0.internal;
 
 % Finally Drift Velocity calculation Eqn. 23.4-11 from Fluent's User's Guide
 % using Eqn. 28 from Manninen

@@ -48,9 +48,7 @@ if 1 % Enables temporal loop
 
 % Temporal loop
 for step=1:timesteps
-  fprintf('---------------------------------\n')
-  fprintf('Timestep: %d. Time: %g\n',step,step*dt)
-
+  fprintf('**************** Starting timestep: %d ****************\n',step)
 
   % Mixture equation solution
   rhoEqn
@@ -65,7 +63,7 @@ for step=1:timesteps
 
   % alphaEqn
   %alphaEqn
-  alphaEqnIshii
+  alphaEqnGastaldoPre
  
 
   %PISO loop
@@ -74,6 +72,8 @@ for step=1:timesteps
       pEqn
     end
   end
+
+  alphaEqnGastaldoPost
 
 %if (step<timesteps)
 
@@ -88,23 +88,11 @@ for step=1:timesteps
   rhomPhi0=rhomPhi;
 %end
 
-  % Printing and saving
-  if 1
-    hold on;
-    if (rem(step,100)==0 || step==1)
-      %plot(xC,u.internal,'r*-')
-      eval(['save mixtureSolver-UADE-' num2str(step) '.dat alphag rhom U p xC xF'])
-    end
-  end
-
-
 end
 
 end % Ends condition for temporal loop
 
 save -binary dump.dat rhom0 rhom alphag0 alphag U0 U rhomPhi0 rhomPhi Alphag0 Alphag
-hold on;
-plot(xC,p.internal,'r*-');
 
 %end % End function mixtureSolver
 
