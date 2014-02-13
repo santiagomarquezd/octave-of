@@ -50,16 +50,19 @@ dt=0.001;
 % Initialization
 initia=1;
 
-% Method selection, Rusanov, FVS, Centered, Godunov
-method='KT';
+% Method selection, Rusanov, Godunov, Centered, UADE, KT (Kurganov & Tadmor)
+method='Godunov';
 
 % Number of timesteps
 timesteps=200; %100;
 
 % Number of cells
-N=1000/2;
+N=100;
 
 % Numerical Pre-processing
+
+% Auxiliar variable for temporal debugging
+TAux=zeros(timesteps,1);
 
 % Cell centers and face centers calculation
 % Equi-spaced cells
@@ -108,7 +111,10 @@ for i=1:timesteps
 
   % Prints the actual iteration
   printf('Time-step: %d. Time: %g\n',i,i*dt);
-  %i
+
+  % Sum of u along the domain to check conservation
+  acc=sum(u.internal);	
+  printf('Sum of u in the domain: %g\n',acc);
 	 
   if (strcmp(method,'Rusanov'))
 
@@ -117,7 +123,8 @@ for i=1:timesteps
     cp=assign(assign(constField(rhog,N),u,'*'),rhom,'/');
     if 1
       fluxU=assign(assign(assign(constField(V0,N),assign(constField(1,N),u,'-'),'*'),u,'*'),assign(constField(1,N),cp,'-'),'*');
-      [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqn(u,rhol,rhog,V0,constField(0,N));      
+      %[a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqn(u,rhol,rhog,V0,constField(0,N));
+      [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqn(u,rhol,rhog,V0,0);      
     else
       fluxU=assign(assign(assign(constField(V0,N),assign(constField(1,N),u,'-'),'*'),u,'*'),assign(constField(1,N),u,'-'),'*');
       [a_j_minus_half,a_j_plus_half]=aspeedTrafficCubic(u,V0);
@@ -152,13 +159,15 @@ for i=1:timesteps
     % Limiting
     % Sweby's fuction calculation
     % phiAlphag=superbee(rvalue(u,1E-9));
-    phiAlphag=vanLeer(rvalue(u,1E-9));
+    % phiAlphag=vanLeer(rvalue(u,1E-9));
+    phiAlphag=vanLeer(rvalue(u,1E-9))*0; % Constant values by cells (mimiking Rusanov?)
 
  
     % Limited values calculation
     [uLimited]=limitedValues(u,phiAlphag,dx,dt);
 
-    [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqn(u,rhol,rhog,V0,constField(0,N));  
+    %[a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqn(u,rhol,rhog,V0,constField(0,N));
+    [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqn(u,rhol,rhog,V0,0);    
     % Stabilization flux has to be zero at boundaries
     a_j_minus_half(1)=0;
     a_j_plus_half(end)=0;
@@ -209,6 +218,10 @@ for i=1:timesteps
     end
   end
 
+  % Time debugging variable storing
+  TAux(i,1)=sum(u.internal)-acc;
+  printf('Delta u in present timestep: %g\n',TAux(i));
+  
 end
 
 save data.dat u 

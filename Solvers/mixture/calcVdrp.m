@@ -42,6 +42,11 @@ elseif (VpqModel == 2)
   else
     Vpq.internal=-0.000037*(rhog-rhom.internal)./rhog*100;
   end
+
+elseif (VpqModel == 3)
+
+  Vpq.internal = V0*ones(N,1);
+
 end
 
 % To adjust BC's to dictionary

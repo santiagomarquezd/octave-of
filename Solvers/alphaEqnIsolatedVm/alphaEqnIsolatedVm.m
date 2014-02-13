@@ -1,4 +1,4 @@
-% Solves the Alpha equation (isolated from the complete multiphase solver) with Vm=0
+% Solves the Alpha equation (isolated from the complete multiphase solver) with Vm!=0
 % by Rusanov, Flux Vector Splitting UADE and Central Difference Methods
 %
 % du/dt+d/dx[F(u)]=0; 
@@ -18,13 +18,15 @@ if 1
   V0=1;
   rhol=1000;
   rhog=1;
+  % Exponent for relative velocity law
+  aexp=1;
 
   % Domain extension
   xleft=0;
   xright=1;
 else
   % Latsa/Youngs
-  % Physical paramaters
+  % Physical parameters
   g=0;
   V0=1;
   rhol=1;
@@ -43,25 +45,29 @@ uTop=0.3;%0.5;
 layers=0; % Selects initialization with layers
 UBottom=0.9;
 
+
 % Time-step
-dt=0.001;
+dt=0.001/2; %0.001;
 
 % Initialization
 initia=1;
 
-% Method selection, Rusanov, FVS, Centered
-method='Rusanov';%'Centered';%'UADE';%'Rusanov';%'FVS';%
+% Method selection, KT, KTcFlux, Rusanov, Godunov, Centered, UADE
+method='Rusanov';
 
 % Inclusion of Vm in total flux for Rusanov method
 VmIncluded=1; %1: included, 0: not included
 
 % Number of timesteps
-timesteps=1000; %100;
+timesteps=1000; %400; %100;
 
 % Number of cells
-N=1000;
+N=400; %1000;
 
 % Numerical Pre-processing
+
+% Auxiliar variable for temporal debugging
+TAux=zeros(timesteps,1);
 
 % Cell centers and face centers calculation
 % Equi-spaced cells
@@ -74,7 +80,6 @@ w=weights(xC, xF);
 S=1;
 Sf=ones(size(xF))*S;
 
-
 % Fields initialization
 % u
 u.internal=ones(N,1)*uTop;
@@ -85,7 +90,17 @@ u.right.gradient=0;
 if (layers)
   u.internal(1:floor(N/2)+1)=UBottom;
 end
+u.internal(1:4)=0;
+u.internal(end-4:end)=1;
 u=setBC(u,constField(0,N),xC,xF,0);
+
+% Vm
+Vm.internal=zeros(N,1);
+Vm.left.type='G';
+Vm.left.gradient=0;
+Vm.right.type='G';
+Vm.right.gradient=0;
+Vm=setBC(Vm,constField(0,N),xC,xF,0);
 
 % Fluxes initialization
 fluxU.internal=zeros(N,1);
@@ -95,8 +110,9 @@ fluxU.right.type='V';
 fluxU.right.value=0;
 fluxU=setBC(fluxU,constField(0,N),xC,xF,0);
 
+% Dummy rho for set BC operations
 dummyRho=constField(1,N);
-
+  
 % Memory allocation only needed for FVS
 if (strcmp(method,'FVS'))
   A=zeros(2,2,N);
@@ -113,7 +129,10 @@ for i=1:timesteps
 
   % Prints the actual iteration
   printf('Time-step: %d. Time: %g\n',i,i*dt);
-  %i
+  
+  % Sum of u along the domain to check conservation
+  acc=sum(u.internal);	
+  printf('Sum of u in the domain: %g\n',acc);
 
   % Common fields calculation
   Vpq=assign(constField(V0,N),assign(constField(1,N),u,'-'),'*');
@@ -121,12 +140,7 @@ for i=1:timesteps
   cp=assign(assign(constField(rhog,N),u,'*'),rhom,'/');
   % Vm is calculated from an analytical expression since the complete solver is not available
   Vm=assign(Vpq,assign(u,assign(assign(constField(rhog,N),rhom,'/'),constField(1,N),'-'),'*'),'*');
-
-  % Vm
-  Vm.left.type='G';
-  Vm.left.gradient=0;
-  Vm.right.type='G';
-  Vm.right.gradient=0;
+  % BC's setting
   Vm=setBC(Vm,constField(0,N),xC,xF,0);
 	 
   if (strcmp(method,'Rusanov'))
@@ -176,6 +190,68 @@ for i=1:timesteps
 
     [u]=Godunov(u,@alphaEqnVmFlux,cfluxU,dummyRho,dummyRho,V0,rhol,rhog,1,dx,dt,10);
 
+  elseif (strcmp(method,'KT'))
+
+    % Limiting
+    % Sweby's fuction calculation
+    % phiAlphag=superbee(rvalue(u,1E-9));
+    % phiAlphag=vanLeer(rvalue(u,1E-9));
+    phiAlphag=vanLeer(rvalue(u,1E-9))*0; % Constant values by cells (mimiking Rusanov?)
+ 
+    % Limited values calculation
+    [uLimited]=limitedValues(u,phiAlphag,dx,dt);
+
+    %[a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqn(u,rhol,rhog,V0,constField(0,N));
+    [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqnVm(u,rhol,rhog,V0,0);    
+    % Stabilization flux has to be zero at boundaries
+    a_j_minus_half(1)=0;
+    a_j_plus_half(end)=0;
+    % Flatten for KT function
+    aeigens=[a_j_minus_half; a_j_plus_half(end)];
+
+    % Time advancement by Kurnanov & Tadmor's scheme
+    [uDummy,u]=KT(u,u,uLimited,uLimited,@alphaEqnVmFluxFlat,@alphaEqnVmFluxFlat,aeigens,dx,dt,V0,rhol,rhog,aexp);
+
+  elseif (strcmp(method,'KTcFlux'))
+
+    % Using Kurganov & Tadmor but with Vm as centered flux
+
+    % Limiting
+    % Sweby's fuction calculation
+    % phiAlphag=superbee(rvalue(u,1E-9));
+    phiAlphag=vanLeer(rvalue(u,1E-9));
+    %phiAlphag=vanLeer(rvalue(u,1E-9))*0; % Constant values by cells (mimiking Rusanov?)
+ 
+    % Limited values calculation
+    [uLimited]=limitedValues(u,phiAlphag,dx,dt);
+
+    if 1  
+      % Eigenvalues for complete flux
+      [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqnVm(u,rhol,rhog,V0,0);    
+    else
+      % Eigenvalues for flux without Vm
+      [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqn(u,rhol,rhog,V0,0); 
+    end
+    % Stabilization flux has to be zero at boundaries
+    a_j_minus_half(1)=0;
+    a_j_plus_half(end)=0;
+    % Flatten for KT function
+    aeigens=[a_j_minus_half; a_j_plus_half(end)];
+
+    % Vm as a centered flux
+    phic=fvc_interpolate(Vm, w, xC, xF);
+
+    % Impermeable walls
+    phic(1)=0;
+    phic(end)=0;
+
+    % alphag at faces
+    uInt=fvc_interpolate(u, w, xC, xF);
+
+    % Time advancement by Kurnanov & Tadmor's scheme with additional centered flux
+    %[uDummy,u]=KT(u,u,uLimited,uLimited,@alphaEqnNoVmFluxFlat,@alphaEqnNoVmFluxFlat,aeigens,dx,dt,V0,rhol,rhog,aexp);
+    [u]=KTcFlux(u,uLimited,@alphaEqnNoVmFluxFlat,aeigens,phic,uInt,dx,dt,constField(1,N),constField(1,N),ones(N+1,1),V0,rhol,rhog,aexp);
+
   else
     % Centered flux for Vm inclusion
     phiAlpha=fvc_interpolate(Vm, w, xC, xF);
@@ -218,6 +294,10 @@ for i=1:timesteps
     end
   end
 
+  % Time debugging variable storing
+  TAux(i,1)=sum(u.internal)-acc;
+  printf('Delta u in present timestep: %g\n',TAux(i));
+  
   % Field actualization
   Vm0=Vm;
   rhom0=rhom;
@@ -226,5 +306,3 @@ end
 
 save data.dat u 
 
-
-%fluxUm=assign(assign(assign(assign(constField(V0,N),assign(constField(1,N),u,'-'),'*'),u,'*'),assign(assign(assign(constField(rhog,N),rhom,'/'),constField(1,N),'-'),u,'*'),'*'),u,'*');

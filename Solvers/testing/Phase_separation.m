@@ -11,14 +11,14 @@ nul=1E-6;
 rhol=1000;
 mul=0.001;
 nug=1E-5;
-rhog=1; %930; %1;
+rhog=1; %500; %1; %930; %1;
 dp=0.005; % 
 g=-10;
 
-% Relative velocity model (1: UADE, 2: Schiller-Naumann)
+% Relative velocity model (1: UADE, 2: Schiller-Naumann, 3:Constant, V0)
 VpqModel=1;
 % UADE model Vpq=V0.*((alphaMax-min(alpha.internal,alphaMax))/alphaMax).^a
-V0=1;%0.282*0;
+V0=1; %1;%0.282*0;
 alphaMax=1;
 aexp=1;
 
@@ -27,13 +27,15 @@ alphaG0Top=0.3;%1;%0.5;
 layers=0; % Selects initialization with layers
 alphaG0Bottom=0;
 
-
 % Numerical parameters
 % Time-step
-dt=0.001;%0.141843971631206/10; %0.141843971631206/10; %0.00001;
+dt=0.001/5;%0.141843971631206/10; %0.141843971631206/10; %0.00001;
 
 % Number of timesteps
-timesteps=10;%2000;
+timesteps=2500; %1000; %1410; %5000;%100; %12;%2000;
+
+% Number of iteration when time-shifting in rhom starts
+TS=2; %3; %E10;
 
 % Numerical diffusivity for stabilization multiplier in Alpha Equation
 mult=0; %1    %nu=mult*1/2*mean(abs(U)+abs(Vpq))*mean(dx)*ones(size(rhomPhi));
@@ -56,7 +58,7 @@ alphaDiv=1; %2;
 alphaExplicit=1; %1: explicit, 0: implicit
 
 % Number of cells
-N=400; %6;
+N=400; %400; %400; %6;
 
 % Number of PISO correction in the last timestep
 stopCorr=3; 
@@ -64,8 +66,11 @@ stopCorr=3;
 % Full message selection
 fullVerbose=0;  %1: enable, 0:disabled
 
-% Problema initialization
+% Problem initialization
 initia=1; % 1: initialization, 0: run from dump data
+
+% Temporal auxiliar variable, only for debugging
+TAux=zeros(timesteps,1);
 
 % ********************* NUMERICAL PRE-PROCESSING ***********************
 
@@ -125,6 +130,9 @@ alphag.right.gradient=0;
 if (layers)
   alphag.internal(1:floor(N/2)+1)=alphaG0Bottom;
 end
+%alphag.internal(1:4)=0;
+%alphag.internal(end-4:end)=1;
+%alphag.internal=[0.05 0.15 0.25 0.35 0.45 0.55 0.65 0.75 0.85 0.95]';
 alphag=setBC(alphag,constField(0,N),xC,xF,g);
 
 % rhom field

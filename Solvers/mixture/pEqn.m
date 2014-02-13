@@ -31,10 +31,8 @@ rhomPhiU=rhomPhi;
 
 rhomPhi -= ghf.*fvc_snGrad(rhom,xC,xF).*rUAf.*Sf;
 
-
-
 % This line has been added but it isn't in original code
-% rhomPhi(end)=0;
+%rhomPhi(end)=0;
 
 %if 0
 

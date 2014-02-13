@@ -7,5 +7,7 @@ eval(['addpath ' b(1:end-1) '/Cent-Schemes'])
 eval(['addpath ' b(1:end-1) '/Solvers/testing'])
 eval(['addpath ' b(1:end-1) '/Solvers/Traffic'])
 eval(['addpath ' b(1:end-1) '/Solvers/alphaEqnIsolatedVm'])
+eval(['addpath ' b(1:end-1) '/Solvers/alphaEqnIsolatedUm'])
+eval(['addpath ' b(1:end-1) '/Solvers/alphaEqnIsolated'])
 
 

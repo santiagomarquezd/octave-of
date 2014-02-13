@@ -5,13 +5,9 @@
 clear all;
 page_screen_output(0);
 
-  %tubopasante
-  %tubopasanteTrivial
-  %tubopasanteSaltoAlphag
-  %tubopasanteSaltoV
-  %tubopasanteMomCteVmayorInit
   %Garcia_Cascales_Phase_separation
-  Phase_separation
+  %Phase_separation
+  Gastaldo_Phase_separation
 
 % **************************** MAIN PROGRAM ***************************
 
@@ -89,7 +85,7 @@ for step=1:timesteps
 %end
 
   % Printing and saving
-  if 1
+  if 0
     hold on;
     if (rem(step,100)==0 || step==1)
       %plot(xC,u.internal,'r*-')
@@ -103,8 +99,10 @@ end
 end % Ends condition for temporal loop
 
 save -binary dump.dat rhom0 rhom alphag0 alphag U0 U rhomPhi0 rhomPhi Alphag0 Alphag
-hold on;
-plot(xC,p.internal,'r*-');
+if 0
+  hold on;
+  plot(xC,p.internal,'r*-');
+end
 
 %end % End function mixtureSolver
 

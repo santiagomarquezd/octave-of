@@ -1,4 +1,4 @@
-function [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqnVm(alphag,rhol,rhog,V0)
+function [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqnVm(alphag,rhol,rhog,V0,a)
     % Gives the max of spectral radius at interfaces for 
     % Kurganov and Tadmor's kind of schemes
     % in simplified mixture problem for isolated alpha equation
@@ -10,9 +10,9 @@ function [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqnVm(alphag,rhol,rho
     % The eigenvalues are calculated without having rhom and Vr
     % wich can be calculated from theoretical formulas
     % rhom=rhog*alphag+(1-alphag)*rhol
-    % Vr=V0*(1-alphag)
+    % Vr=V0*(1-alphag)^a
     %
-    % [a_j_minus_half,a_j_plus_half]=aaspeedIsolatedAlphaEqn(alphag,rhol,rhog,V0)
+    % [a_j_minus_half,a_j_plus_half]=aaspeedIsolatedAlphaEqn(alphag,rhol,rhog,V0,a)
     %
     % a_j_minus_half: max of spectral radius at left interfaces
     % a_j_plus_half: max of spectral radius at right interfaces
@@ -20,12 +20,19 @@ function [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqnVm(alphag,rhol,rho
     % rhol: liquid density
     % rhog: gas density
     % V0: velocity constant for relative velocity law
+    % a: exponent constant for relative velocity law
    
     
     % Data is flatten for an easier calculus (BC's and internal at the same time)
     alphag=[alphag.left.setvalue; alphag.internal; alphag.right.setvalue];
 
-    eig1=(((4.*alphag.^4-7.*alphag.^3+alphag.^2+3.*alphag-1).*rhol+(-4.*alphag.^4+7.*alphag.^3-4.*alphag.^2+alphag).*rhog).*V0)./((alphag-1).*rhol-alphag.*rhog);
+    % Version assuming a=1
+    %eig1=(((4.*alphag.^4-7.*alphag.^3+alphag.^2+3.*alphag-1).*rhol+(-4.*alphag.^4+7.*alphag.^3-4.*alphag.^2+alphag).*rhog).*V0)./((alphag-1).*rhol-alphag.*rhog); 
+    % Full version with free a
+    % eig1=-((((a+3).*(1-alphag).^a.*alphag.^3-3.*(1-alphag).^a.*alphag.^2+(-a-1).*(1-alphag).^a.*alphag+(1-alphag).^a).*rhol+ ((-a-3).*(1-alphag).^a.*alphag.^3+3.*(1-alphag).^a.*alphag.^2-(1-alphag).^a.*alphag).*rhog).*V0)./((alphag-1).*rhol-alphag.*rhog);	
+    % Correct version with free a (the flux is rhom, rhol and rhog independent)
+    eig1=((-a-2).*(1-alphag).^a.*alphag+(1-alphag).^a).*V0;
+    
 
     eig2=eig1;
 
