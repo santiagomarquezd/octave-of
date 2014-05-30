@@ -27,7 +27,7 @@ uInit=0.9;
 dt=0.001;
 
 % Number of timesteps
-timesteps=100; %100;
+timesteps=1000; %100;
 
 % Number of cells
 N=1000;
@@ -71,46 +71,48 @@ fluxU=setBC(fluxU,constField(0,N),xC,xF,0);
 
 dummyRho=constField(1,N);
 
-hold on;
-
 % Temporal loop
 for i=1:timesteps
 
-  % Prints the actual iteration
-  i
-      if 0
-	% Typical traffic flow flux function
-	fluxU=assign(assign(constField(V0,N),assign(constField(1,N),u,'-'),'*'),u,'*');
-	[a_j_minus_half,a_j_plus_half]=aspeedTraffic(u,V0);
-      else
-	% Cubic traffic flow flux function
-	fluxU=assign(assign(assign(constField(V0,N),assign(constField(1,N),u,'-'),'*'),u,'*'),assign(constField(1,N),u,'-'),'*');
-	[a_j_minus_half,a_j_plus_half]=aspeedTrafficCubic(u,V0);
-      end
+    % Prints the actual iteration
+    i
+    if 1
+        % Typical traffic flow flux function
+        fluxU=assign(assign(constField(V0,N),assign(constField(1,N),u,'-'),'*'),u,'*');
+        [a_j_minus_half,a_j_plus_half]=aspeedTraffic(u,V0);
+    else
+        % Cubic traffic flow flux function
+        fluxU=assign(assign(assign(constField(V0,N),assign(constField(1,N),u,'-'),'*'),u,'*'),assign(constField(1,N),u,'-'),'*');
+        [a_j_minus_half,a_j_plus_half]=aspeedTrafficCubic(u,V0);
+    end
 
-      % Ensure no fluxes at boundaries
-      fluxU.left.type='V';
-      fluxU.left.value=0;
-      fluxU.right.type='V';
-      fluxU.right.value=0;
-      fluxU=setBC(fluxU,constField(0,N),xC,xF,0);
-   
-      % Stabilization flux has to be zero at boundaries too
-      a_j_minus_half(1)=0;
-      a_j_plus_half(end)=0;  
+    % Ensure no fluxes at boundaries
+    fluxU.left.type='V';
+    fluxU.left.value=0;
+    fluxU.right.type='V';
+    fluxU.right.value=0;
+    fluxU=setBC(fluxU,constField(0,N),xC,xF,0);
 
-      % No conservative fluxes are used
-      cfluxU=zeros(N+1,1);
+    % Stabilization flux has to be zero at boundaries too
+    a_j_minus_half(1)=0;
+    a_j_plus_half(end)=0;  
+
+    % No conservative fluxes are used
+    cfluxU=zeros(N+1,1);
     
-      if 1
-	[u,u]=Rusanov(u,u,fluxU,fluxU,cfluxU,cfluxU,a_j_minus_half,a_j_plus_half,0,0,dummyRho,dummyRho,dx,dt);	   
-      else
-	[u,u]=LxF(u,u,fluxU,fluxU,dx,dt);
-      end
+    if 1
+
+        [u,u]=Rusanov(u,u,fluxU,fluxU,cfluxU,cfluxU,a_j_minus_half,a_j_plus_half,0,0,dummyRho,dummyRho,dx,dt);	   
+    else
+        [u,u]=LxF(u,u,fluxU,fluxU,dx,dt);
+    end
       
-      if 0
-	if (rem(i,100)==0)
-	  plot(xC,u.internal,'r*-')
-	end
-      end
+    if 1
+        if (rem(i,10)==0)
+            hold off;    
+            %plot(xC,u.internal,'r*-')
+            plot(xC,u.internal,'b-')
+            pause
+        end
+    end
 end

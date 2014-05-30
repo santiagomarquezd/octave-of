@@ -36,7 +36,7 @@ timesteps=1000/10; %100;
 N=1000;
 
 % Method selection, Rusanov, FVS, Centered
-method='UADE';%'SimpleGodunov';%'Rusanov'; %'UADE';
+method='Godunov';%'SimpleGodunov';%'Rusanov'; %'UADE';
 
 % Numerical Pre-processing
 
@@ -110,7 +110,7 @@ for i=1:timesteps
   elseif (strcmp(method,'UADE'))
 
     % Traffic velocity
-    if 0    
+    if 1    
       Vpq=assign(constField(V0,N),assign(constField(1,N),u,'-'),'*');
     else
       Vpq=assign(constField(V0,N),assign(assign(constField(1,N),u,'-'),constField(1/2,N),'^'),'*');

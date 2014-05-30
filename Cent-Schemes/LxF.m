@@ -23,7 +23,6 @@ function [u1,u2]=LxF(u1_0,u2_0,flux1,flux2,dx,dt)
     u1.internal(1)=(u1_0.left.setvalue+u1_0.internal(2))/2-dt/dx/2*(flux1.internal(2)-flux1.left.setvalue);
     u1.internal(end)=(u1_0.right.setvalue+u1_0.internal(end-1))/2-dt/dx/2*(flux1.right.setvalue-flux1.internal(end-1));
     
-    
     u2.internal(1)=(u2_0.left.setvalue+u2_0.internal(2))/2-dt/dx/2*(flux2.internal(2)-flux2.left.setvalue);
     u2.internal(end)=(u2_0.right.setvalue+u2_0.internal(end-1))/2-dt/dx/2*(flux2.right.setvalue-flux2.internal(end-1));
 end

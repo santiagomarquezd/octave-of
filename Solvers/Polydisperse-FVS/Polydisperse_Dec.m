@@ -17,7 +17,7 @@ page_screen_output(0);
 g=0;
 
 % Constants for advective velocities
-V0=[-2;0];
+V0=[-1;-1];
 
 % Exponents for advective velocities
 a=[1;1];
@@ -33,18 +33,18 @@ vLeft2=2;
 % Two section iniatilization
 layers=1;
 layerL1=1;
-ULeft1=0.25;
+ULeft1=0.7;
 layerL2=1;
-ULeft2=0.5;
+ULeft2=0.7;
 
 % Time-step
 dt=0.001;
 
 % Number of timesteps
-timesteps=1; %1000/1000*10;
+timesteps=10; %1000/1000*10;
 
 % Number of cells
-N=4; %400
+N=400; %400
 
 % Numerical Pre-processing
 
@@ -58,8 +58,8 @@ lambda=dt/dx;
 % Fields initialization
 % u1
 u1.internal=zeros(N,1);
-u1.left.type='V';
-u1.left.value=vLeft1;
+u1.left.type='G';
+u1.left.gradient=0;
 u1.right.type='G';
 u1.right.gradient=0;
 if (layers)
@@ -71,8 +71,8 @@ u1=setBC(u1,constField(0,N),xC,xF,0);
 
 % u2
 u2.internal=zeros(N,1);
-u2.left.type='V';
-u2.left.value=vLeft2;
+u2.left.type='G';
+u2.left.gradient=0;
 u2.right.type='G';
 u2.right.gradient=0;
 if (layers)
@@ -83,16 +83,17 @@ end
 u2=setBC(u2,constField(0,N),xC,xF,0);
 
 
-% One Jacobian per cell
-A=zeros(2,2,N);
+% One Jacobian per inter-cell
+A=zeros(2,2,N-1);
 
 % Temporal loop
 for i=1:timesteps
 
-    % Arrays for all cells (one advection matriz per cell)
-    for j=1:N
+    % Arrays for all inter-cells (one advection matriz per inter-cell)
+    for j=1:N-1
         u=[u1.internal(j);u2.internal(j)];
-        A(:,:,j)=pFluxJacobian(u,V0,a);
+        uipo=[u1.internal(j+1);u2.internal(j+1)];
+        A(:,:,j)=pFluxExactJacobian(u,uipo,V0,a);
     end
 
     [V,VT,LAMBDA]=arrayEig(A);
@@ -104,7 +105,7 @@ for i=1:timesteps
     % Prints the actual iteration
     i
     
-    %[u1,u2]=FVS(u1,u2,Aplus,Aminus,dx,dt,N,1);
+    [u1,u2]=NLSAdvection(u1,u2,Aplus,Aminus,dx,dt,N,1);
 
     %u2.internal=u2.internal*0;
 
