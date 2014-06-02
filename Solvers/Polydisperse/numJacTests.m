@@ -43,6 +43,4 @@ end
 
 Jn
 
-eig(Je)
-eig(Jn)
 
