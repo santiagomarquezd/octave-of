@@ -17,14 +17,60 @@ warning ("off", "Octave:broadcast");
 % Dummy value, only for methods compatibility
 g=0;
 
-% Constants for advective velocities
-V0=[-0.25;-0.5;-1];
+if (0)
+    % Mono-polydispersity report case
 
-% Exponents for advective velocities
-a=[1;1;1]; %a=[1;1;1];
+    % Constants for advective velocities
+    V0=[-0.25;-0.5;-1];
 
-% Volume fraction of dense packed-layer
-alphaDPL=1; %0.7;
+    % Exponents for advective velocities
+    a=[1;1;1]; %a=[1;1;1];
+
+    % Volume fraction of dense packed-layer
+    alphaDPL=1; %0.7;
+
+    % Initial values
+    % Two section iniatilization
+    layers=1;
+    layerL1=1;
+    ULeft1=0.4;
+    layerL2=1;
+    ULeft2=0.2;
+    layerL3=1;
+    ULeft3=0.1;
+
+    % Time-step
+    dt=0.0001; %0.0001
+
+    % Number of timesteps
+    timesteps=25000;
+
+    % Number of cells
+    N=10000;
+else
+    % Test case
+    % Constants for advective velocities
+    V0=[-0.5;-1;-2];
+    % Exponents for advective velocities
+    a=[1;1;1]; %a=[1;1;1];
+    % Volume fraction of dense packed-layer
+    alphaDPL=0.7;
+    % Initial values
+    % Two section iniatilization
+    layers=1;
+    layerL1=1;
+    ULeft1=0.4/2;
+    layerL2=1;
+    ULeft2=0.2/2;
+    layerL3=1;
+    ULeft3=0.1/2;
+    % Time-step
+    dt=0.001; %0.0001
+    % Number of timesteps
+    timesteps=10;
+    % Number of cells
+    N=400;
+end
 
 % Domain extension
 xleft=0;
@@ -33,25 +79,6 @@ xright=1;
 % BC's
 vLeft1=1;
 vLeft2=2;
-
-% Initial values
-% Two section iniatilization
-layers=1;
-layerL1=1;
-ULeft1=0.4;
-layerL2=1;
-ULeft2=0.2;
-layerL3=1;
-ULeft3=0.1;
-
-% Time-step
-dt=0.0001; %0.0001
-
-% Number of timesteps
-timesteps=25000;
-
-% Number of cells
-N=10000;
 
 % Numerical Pre-processing
 
@@ -175,14 +202,14 @@ for i=1:timesteps
     
     else
 
-        if (1)
+        if (0)
 
             % Coupled
 
             % Decoupled
         
             % Flux calculations
-            if (1)
+            if (0)
                 F1=(V0(1,1).*(1-u1tmp).*(1-usum).^a(1,1)-1*(V0(2,1).*(1-usum).^a(2,1).*u2tmp+V0(3,1).*(1-usum).^a(3,1).*u3tmp)).*u1tmp;
                 F2=(V0(2,1).*(1-u2tmp).*(1-usum).^a(2,1)-1*(V0(1,1).*(1-usum).^a(1,1).*u1tmp+V0(3,1).*(1-usum).^a(3,1).*u3tmp)).*u2tmp;
                 F3=(V0(3,1).*(1-u3tmp).*(1-usum).^a(3,1)-1*(V0(1,1).*(1-usum).^a(1,1).*u1tmp+V0(2,1).*(1-usum).^a(2,1).*u2tmp)).*u3tmp;
@@ -239,32 +266,28 @@ for i=1:timesteps
             % Fluxes
             % Cell centered fluxes
             % One flux vector per cell
-            F=zeros(3,N);
-
-            for j=1:N
-                u=[u1.internal(j,1);
-                u2.internal(j,1);
-                u3.internal(j,1)];
-                F(:,j)=pFlux(u,V0,a);
-            end
+            u=[(u1.internal)' 
+               (u2.internal)' 
+               (u3.internal)'];
+   
+            F=arrayPFlux(u,V0,a,alphaDPL);
             % Face fluxes (impermeable walls)
             F=[[0; 0; 0] (F(:,1:(end-1))+F(:,2:(end)))/2 [0; 0; 0]];
 
             % Arrays for all inter-cells (one advection matriz per inter-cell)
-            % One by one version
-            for j=1:N-1
-                u=[(u1.internal(j,1)+u1.internal(j+1,1))/2;
-                (u2.internal(j,1)+u2.internal(j+1,1))/2;
-                (u3.internal(j,1)+u3.internal(j+1,1))/2];
-                A(:,:,j)=pFluxJacobian(u,V0,a);
-            end
+            % Vectorized version
+            u=[((u1.internal(1:end-1)+u1.internal(2:end))/2)' 
+               ((u2.internal(1:end-1)+u2.internal(2:end))/2)' 
+               ((u3.internal(1:end-1)+u3.internal(2:end))/2)'];   
+            
+            A=arrayPFluxJacobian(u,V0,a,alphaDPL);
 
-            lambda=arrayMaxEig(A);
+            lambda=arrayMaxAbsEig(A);
+            LAMBDA=[lambda';lambda';lambda'];
 
             % Rusanov fluxes (the boundary fluxes are left zero)
             u=[u1.internal u2.internal u3.internal]'; 
-
-            F(:,2:end-1)=F(:,2:end-1)-1/2.*lambda'.*(u(:,2:end)-u(:,1:end-1));
+            F(:,2:end-1)=F(:,2:end-1)-1/2.*LAMBDA.*(u(:,2:end)-u(:,1:end-1));
 
             % Rusanov integration
             u=u-dt/dx*(F(:,2:end)-F(:,1:end-1));
@@ -278,9 +301,7 @@ for i=1:timesteps
 
     % Apply BC's
     u1=setBC(u1,constField(0,N),xC,xF,0);
-
     u2=setBC(u2,constField(0,N),xC,xF,0);
-
     u3=setBC(u3,constField(0,N),xC,xF,0);
 
 end

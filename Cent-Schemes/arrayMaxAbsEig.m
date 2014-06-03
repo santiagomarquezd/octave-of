@@ -1,7 +1,8 @@
-function [AME]=arrayMaxEig(A)
-  % Gives the max eigenvalue for an array of matrices
+function [AME]=arrayMaxAbsEig(A)
+  % Gives the max of absolute values of eigenvalues
+  % for an array of matrices
   %
-  % [AME]=arrayMaxEig(A)
+  % [AME]=arrayMaxAbsEig(A)
   %
   % A: array of matrices
   % AME: array of max eigenvalues
@@ -13,6 +14,6 @@ function [AME]=arrayMaxEig(A)
   AME=zeros(N,1);
   
   for i=1:N 
-    AME(i,1)=max(max(eig(A(:,:,i))));
+    AME(i,1)=max(max(abs(eig(A(:,:,i)))));
   end
 end
