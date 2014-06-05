@@ -17,7 +17,7 @@ warning ("off", "Octave:broadcast");
 % Dummy value, only for methods compatibility
 g=0;
 
-if (0)
+if (1)
     % Mono-polydispersity report case
 
     % Constants for advective velocities
@@ -43,7 +43,7 @@ if (0)
     dt=0.0001; %0.0001
 
     % Number of timesteps
-    timesteps=25000;
+    timesteps=600000;
 
     % Number of cells
     N=10000;
@@ -54,20 +54,20 @@ else
     % Exponents for advective velocities
     a=[1;1;1]; %a=[1;1;1];
     % Volume fraction of dense packed-layer
-    alphaDPL=0.7;
+    alphaDPL=0.7/0.7;
     % Initial values
     % Two section iniatilization
     layers=1;
     layerL1=1;
-    ULeft1=0.4/2;
+    ULeft1=0.4;
     layerL2=1;
-    ULeft2=0.2/2;
+    ULeft2=0.2;
     layerL3=1;
-    ULeft3=0.1/2;
+    ULeft3=0.1;
     % Time-step
     dt=0.001; %0.0001
     % Number of timesteps
-    timesteps=10;
+    timesteps=60000; %2500;
     % Number of cells
     N=400;
 end
@@ -202,7 +202,7 @@ for i=1:timesteps
     
     else
 
-        if (0)
+        if (1)
 
             % Coupled
 
@@ -310,3 +310,6 @@ close all; plot(xC,u1.internal,'m'); hold on; plot(xC,u2.internal, 'r'); plot(xC
 %figure(2); plot(xC,u1.internal,'m'); hold on; plot(xC,u2.internal, 'r'); plot(xC,u3.internal, 'c');plot(xC,u1.internal+u2.internal+u3.internal, 'k'); plot(xC,1-u1.internal-u2.internal-u3.internal, 'b')
 axis([0 1 0 1])
 
+% eval(["print('-dtex', 'profile_a_" num2str(a) "_" num2str(b) "_d.tex')"]);
+% print('-djpg', 'Rusanov_2_5.jpg')
+print('-djpg', 'LxF_60.jpg')
