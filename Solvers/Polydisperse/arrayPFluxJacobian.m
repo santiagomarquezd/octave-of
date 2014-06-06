@@ -22,11 +22,25 @@ function [J]=arrayPFluxJacobian(u,V0,a,alphaDPL)
 
     % Jacobian calculation loop
     % Derivative of fluxes 1:N respect to variable i
-    for i=1:N
-        Fu=arrayPFlux(u,V0,a,alphaDPL);
-        uPlusdu=u;
-        uPlusdu(i,:)=u(i,:)+du;
-        FuPlusdu=arrayPFlux(uPlusdu,V0,a,alphaDPL);
-        J(:,i,:)=(FuPlusdu-Fu)/du;
+    if (1)
+        % Forward differencing
+        for i=1:N
+            Fu=arrayPFlux(u,V0,a,alphaDPL);
+            uPlusdu=u;
+            uPlusdu(i,:)=u(i,:)+du;
+            FuPlusdu=arrayPFlux(uPlusdu,V0,a,alphaDPL);
+            J(:,i,:)=(FuPlusdu-Fu)/du;
+        end
+    else
+        % Central differencing
+        for i=1:N
+            uMinusdu=u;
+            uMinusdu(i,:)=u(i,:)-du/2;
+            FuMinusdu=arrayPFlux(uMinusdu,V0,a,alphaDPL);
+            uPlusdu=u;
+            uPlusdu(i,:)=u(i,:)+du/2;
+            FuPlusdu=arrayPFlux(uPlusdu,V0,a,alphaDPL);
+            J(:,i,:)=(FuPlusdu-FuMinusdu)/du;
+        end
     end
 end

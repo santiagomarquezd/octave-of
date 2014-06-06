@@ -19,6 +19,8 @@ g=0;
 
 if (0)
     % Mono-polydispersity report case
+    % Method of ingration (LxF, Rusanov, Roe)
+    method='LxF';
 
     % Constants for advective velocities
     V0=[-0.25;-0.5;-1];
@@ -49,25 +51,27 @@ if (0)
     N=10000;
 else
     % Test case
+    % Method of ingration (LxF, Rusanov, Roe)
+    method='Roe'; %'LxF';
     % Constants for advective velocities
     V0=[-0.5;-1;-2];
     % Exponents for advective velocities
     a=[1;1;1]; %a=[1;1;1];
     % Volume fraction of dense packed-layer
-    alphaDPL=0.7;
+    alphaDPL=1;
     % Initial values
     % Two section iniatilization
     layers=1;
     layerL1=1;
-    ULeft1=0.4/2;
+    ULeft1=0.4;
     layerL2=1;
-    ULeft2=0.2/2;
+    ULeft2=0.2;
     layerL3=1;
-    ULeft3=0.1/2;
+    ULeft3=0.1;
     % Time-step
     dt=0.001; %0.0001
     % Number of timesteps
-    timesteps=10;
+    timesteps=60000; %2500/25;
     % Number of cells
     N=400;
 end
@@ -202,12 +206,10 @@ for i=1:timesteps
     
     else
 
-        if (0)
+        if (strcmp(method,'LxF'))
 
             % Coupled
 
-            % Decoupled
-        
             % Flux calculations
             if (0)
                 F1=(V0(1,1).*(1-u1tmp).*(1-usum).^a(1,1)-1*(V0(2,1).*(1-usum).^a(2,1).*u2tmp+V0(3,1).*(1-usum).^a(3,1).*u3tmp)).*u1tmp;
@@ -259,7 +261,7 @@ for i=1:timesteps
             % Last cell
             u3.internal(N)=1/2*(u3tmp(N-1)+u3tmp(N))+dt/dx/2*(F3(N-1)+F3(N)); % Impermeable wall
     
-        else
+        elseif (strcmp(method,'Rusanov'))
 
             % Rusanov solution
 
@@ -296,6 +298,60 @@ for i=1:timesteps
             u2.internal=u(2,:)';
             u3.internal=u(3,:)';
 
+        elseif (strcmp(method,'Roe'))
+
+            % Roe solution
+
+            % Fluxes
+            % Cell centered fluxes
+            % One flux vector per cell
+            u=[(u1.internal)' 
+               (u2.internal)' 
+               (u3.internal)'];
+   
+            F=arrayPFlux(u,V0,a,alphaDPL);
+            % Face fluxes (impermeable walls)
+            F=[[0; 0; 0] (F(:,1:(end-1))+F(:,2:(end)))/2 [0; 0; 0]];
+
+            % Arrays for all inter-cells (one advection matriz per inter-cell)
+            % Vectorized version
+            u=[((u1.internal(1:end-1)+u1.internal(2:end))/2)' 
+               ((u2.internal(1:end-1)+u2.internal(2:end))/2)' 
+               ((u3.internal(1:end-1)+u3.internal(2:end))/2)'];   
+            
+
+            A=arrayPFluxJacobian(u,V0,a,alphaDPL);
+
+            [V,VT,LAMBDA]=arrayEig(A);
+
+            % Quartepell p. 81
+            % V^(-1)*A*V=LAMBDA
+            % V*LAMBDA*V^(-1)=A
+            % V is right eigenvector
+            % Left eigenvector L=R^(-1)
+
+            % Some complex eigenvalues and eigenvector appear
+            %ARoe=matrixArrayProd(matrixArrayProd(real(V),abs(LAMBDA)),matrixArrayInverse(real(V)));
+            ARoe=matrixArrayProd(matrixArrayProd(V,abs(LAMBDA)),matrixArrayInverse(V));        
+
+            % Roe fluxes (the boundary fluxes are left zero)
+            for j=1:N-1
+                uL=[u1.internal(j,1); u2.internal(j,1); u3.internal(j,1)]; 
+                uR=[u1.internal(j+1,1); u2.internal(j+1,1); u3.internal(j+1,1)]; 
+                F(:,j+1)=F(:,j+1)-1/2*ARoe(:,:,j)*(uR(:,1)-uL(:,1));
+            end
+
+            % Data reshaping
+            u=[u1.internal u2.internal u3.internal]'; 
+
+            % Roe integration
+            u=u-dt/dx*(F(:,2:end)-F(:,1:end-1));
+
+            % Data reshaping
+            u1.internal=u(1,:)';
+            u2.internal=u(2,:)';
+            u3.internal=u(3,:)';
+
         end
     end
 
@@ -306,7 +362,9 @@ for i=1:timesteps
 
 end
 
-close all; plot(xC,u1.internal,'m'); hold on; plot(xC,u2.internal, 'r'); plot(xC,u3.internal, 'c');plot(xC,u1.internal+u2.internal+u3.internal, 'k'); plot(xC,1-u1.internal-u2.internal-u3.internal, 'b')
-%figure(2); plot(xC,u1.internal,'m'); hold on; plot(xC,u2.internal, 'r'); plot(xC,u3.internal, 'c');plot(xC,u1.internal+u2.internal+u3.internal, 'k'); plot(xC,1-u1.internal-u2.internal-u3.internal, 'b')
+%close all; figure(2);plot(xC,u1.internal,'m'); hold on; plot(xC,u2.internal, 'r'); plot(xC,u3.internal, 'c');plot(xC,u1.internal+u2.internal+u3.internal, 'k'); plot(xC,1-u1.internal-u2.internal-u3.internal, 'b')
+close all; figure(1); plot(xC,u1.internal,'m'); hold on; plot(xC,u2.internal, 'r'); plot(xC,u3.internal, 'c');plot(xC,u1.internal+u2.internal+u3.internal, 'k'); plot(xC,1-u1.internal-u2.internal-u3.internal, 'b')
+%plot(xC,u1.internal,'m');
 axis([0 1 0 1])
+
 
