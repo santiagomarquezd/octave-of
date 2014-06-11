@@ -51,8 +51,8 @@ if (0)
     N=10000;
 else
     % Test case
-    % Method of ingration (LxF, Rusanov, Roe)
-    method='Roe'; %'LxF';
+    % Method of ingration (LxF, Rusanov, Roe, KT)
+    method='KT'; %'LxF';
     % Constants for advective velocities
     V0=[-0.5;-1;-2];
     % Exponents for advective velocities
@@ -71,7 +71,7 @@ else
     % Time-step
     dt=0.001; %0.0001
     % Number of timesteps
-    timesteps=2500; %2500/25;
+    timesteps=5000; %2500/25;
     % Number of cells
     N=400;
 end
@@ -324,7 +324,7 @@ for i=1:timesteps
 
             [V,VT,LAMBDA]=arrayEig(A);
 
-            % Quartepell p. 81
+            % Quartepelle p. 81
             % V^(-1)*A*V=LAMBDA
             % V*LAMBDA*V^(-1)=A
             % V is right eigenvector
@@ -352,7 +352,7 @@ for i=1:timesteps
             u2.internal=u(2,:)';
             u3.internal=u(3,:)';
 
-        elseif (strcmp(method,'Roe'))
+        elseif (strcmp(method,'KT'))
 
             % Kurganov and Tadmor solution
 
@@ -368,62 +368,78 @@ for i=1:timesteps
             % Limited values calculation
             [u1Limited]=limitedValues(u1,phiU1,dx,dt);
             [u2Limited]=limitedValues(u2,phiU2,dx,dt);
-            [u3Limited]=limitedValues(u3,phiU3,dx,dt);    
+            [u3Limited]=limitedValues(u3,phiU3,dx,dt);
 
-            % Fluxes
-            % Cell centered fluxes
-            % One flux vector per cell
-            u=[(u1.internal)' 
-               (u2.internal)' 
-               (u3.internal)'];
+            % m_h: from left boundary to last intercell
+            % p_h: from first intercell to right boundary
 
+            % Left and right Jacobians at intercells (N-1 intercells)
+            uMinus=[(u1Limited.u_i_p_h_l(1:N-1))' 
+                    (u2Limited.u_i_p_h_l(1:N-1))' 
+                    (u3Limited.u_i_p_h_l(1:N-1))'];
 
-            Fu_star_minus_half=1/2*(ufluxfunction(uLimited.u_i_m_h_r,Um,V0,rhol,rhog,aexp)+...
-                                ufluxfunction(uLimited.u_i_m_h_l,Um,V0,rhol,rhog,aexp)-...
-                                a(1:end-1).*(uLimited.u_i_m_h_r-uLimited.u_i_m_h_l));
-            Fu_star_plus_half=1/2*(ufluxfunction(uLimited.u_i_p_h_r,Um,V0,rhol,rhog,aexp)+...
-                                ufluxfunction(uLimited.u_i_p_h_l,Um,V0,rhol,rhog,aexp)-...
-                                a(2:end).*(uLimited.u_i_p_h_r-uLimited.u_i_p_h_l));
-   
-            F=arrayPFlux(u,V0,a,alphaDPL);
-            % Face fluxes (impermeable walls)
-            F=[[0; 0; 0] (F(:,1:(end-1))+F(:,2:(end)))/2 [0; 0; 0]];
+            uPlus=[(u1Limited.u_i_p_h_r(1:N-1))' 
+                   (u2Limited.u_i_p_h_r(1:N-1))' 
+                   (u3Limited.u_i_p_h_r(1:N-1))'];
 
-            % Arrays for all inter-cells (one advection matriz per inter-cell)
-            % Vectorized version
-            u=[((u1.internal(1:end-1)+u1.internal(2:end))/2)' 
-               ((u2.internal(1:end-1)+u2.internal(2:end))/2)' 
-               ((u3.internal(1:end-1)+u3.internal(2:end))/2)'];   
-            
+            AMinus=arrayPFluxJacobian(uMinus,V0,a,alphaDPL);
+            APlus=arrayPFluxJacobian(uPlus,V0,a,alphaDPL);
 
-            A=arrayPFluxJacobian(u,V0,a,alphaDPL);
-
-            [V,VT,LAMBDA]=arrayEig(A);
-
-            % Quartepell p. 81
-            % V^(-1)*A*V=LAMBDA
-            % V*LAMBDA*V^(-1)=A
-            % V is right eigenvector
-            % Left eigenvector L=R^(-1)
-
-            % Some complex eigenvalues and eigenvector appear
-            %ARoe=matrixArrayProd(matrixArrayProd(real(V),abs(LAMBDA)),matrixArrayInverse(real(V)));
-            ARoe=matrixArrayProd(matrixArrayProd(V,abs(LAMBDA)),matrixArrayInverse(V));        
-
-            % Roe fluxes (the boundary fluxes are left zero)
-            for j=1:N-1
-                uL=[u1.internal(j,1); u2.internal(j,1); u3.internal(j,1)]; 
-                uR=[u1.internal(j+1,1); u2.internal(j+1,1); u3.internal(j+1,1)]; 
-                F(:,j+1)=F(:,j+1)-1/2*ARoe(:,:,j)*(uR(:,1)-uL(:,1));
+            % Filter Jacobians
+            if (1)
+                for j=1:size(AMinus,3)
+                    AMinus(:,:,j)=diag(diag(AMinus(:,:,j)));
+                    APlus(:,:,j)=diag(diag(APlus(:,:,j)));
+                end
             end
 
-            % Data reshaping
+            % Left and right spectral radius
+            lambdaMinus=arrayMaxAbsEig(AMinus);
+            lambdaPlus=arrayMaxAbsEig(APlus);
+
+            % K&T local speeds at intercells
+            aspeeds=max([lambdaMinus';lambdaPlus']);
+            
+%              uMinusHL=[(u1Limited.u_i_m_h_l)' 
+%                        (u2Limited.u_i_m_h_l)' 
+%                        (u3Limited.u_i_m_h_l)'];
+%      
+%              uMinusHR=[(u1Limited.u_i_m_h_r)' 
+%                        (u2Limited.u_i_m_h_r)' 
+%                        (u3Limited.u_i_m_h_r)'];
+
+%              uPlusHL=[(u1Limited.u_i_p_h_l)' 
+%                       (u2Limited.u_i_p_h_l)' 
+%                       (u3Limited.u_i_p_h_l)'];
+%      
+%              uPlusHR=[(u1Limited.u_i_p_h_r)' 
+%                       (u2Limited.u_i_p_h_r)' 
+%                       (u3Limited.u_i_p_h_r)'];
+                       
+
+%              FMinusHL=arrayPFlux(uMinusHL,V0,a,alphaDPL);
+%              FMinusHR=arrayPFlux(uMinusHR,V0,a,alphaDPL);
+%              FPlusHL=arrayPFlux(uPlusHL,V0,a,alphaDPL);
+%              FPlusHR=arrayPFlux(uPlusHR,V0,a,alphaDPL);
+
+            % Fluxes at intercells
+            FMinus=arrayPFlux(uMinus,V0,a,alphaDPL);
+            FPlus=arrayPFlux(uPlus,V0,a,alphaDPL);
+
+            ASPEEDS=[aspeeds;aspeeds;aspeeds];
+
+            F=1/2*(FMinus+FPlus)-1/2*ASPEEDS.*(uPlus-uMinus);
+
+            % Final face fluxes (impermeable walls)
+            F=[[0; 0; 0] F [0; 0; 0]];
+
+            % Data reshaping        
             u=[u1.internal u2.internal u3.internal]'; 
 
-            % Roe integration
+            % K&T integration
             u=u-dt/dx*(F(:,2:end)-F(:,1:end-1));
 
-            % Data reshaping
+            % Data reshaping        
             u1.internal=u(1,:)';
             u2.internal=u(2,:)';
             u3.internal=u(3,:)';
@@ -438,8 +454,8 @@ for i=1:timesteps
 
 end
 
-%close all; figure(2);plot(xC,u1.internal,'m'); hold on; plot(xC,u2.internal, 'r'); plot(xC,u3.internal, 'c');plot(xC,u1.internal+u2.internal+u3.internal, 'k'); plot(xC,1-u1.internal-u2.internal-u3.internal, 'b')
-close all; figure(1); plot(xC,u1.internal,'m'); hold on; plot(xC,u2.internal, 'r'); plot(xC,u3.internal, 'c');plot(xC,u1.internal+u2.internal+u3.internal, 'k'); plot(xC,1-u1.internal-u2.internal-u3.internal, 'b')
+plot(xC,u1.internal,'m'); hold on; plot(xC,u2.internal, 'r'); plot(xC,u3.internal, 'c');plot(xC,u1.internal+u2.internal+u3.internal, 'k'); plot(xC,1-u1.internal-u2.internal-u3.internal, 'b')
+%close all; figure(1); plot(xC,u1.internal,'m'); hold on; plot(xC,u2.internal, 'r'); plot(xC,u3.internal, 'c');plot(xC,u1.internal+u2.internal+u3.internal, 'k'); plot(xC,1-u1.internal-u2.internal-u3.internal, 'b')
 %plot(xC,u1.internal,'m');
 axis([0 1 0 1])
 
@@ -447,19 +463,3 @@ axis([0 1 0 1])
 % print('-djpg', 'Rusanov_2_5.jpg')
 % print('-djpg', 'LxF_60.jpg')
 
-
-
-
- 
-    
-
-    %[a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqn(u,rhol,rhog,V0,constField(0,N));
-    [a_j_minus_half,a_j_plus_half]=aspeedIsolatedAlphaEqn(u,rhol,rhog,V0,0);    
-    % Stabilization flux has to be zero at boundaries
-    a_j_minus_half(1)=0;
-    a_j_plus_half(end)=0;
-    % Flatten for KT function
-    aeigens=[a_j_minus_half; a_j_plus_half(end)];
-
-    % Time advancement by Kurnanov & Tadmor's scheme
-    [uDummy,u]=KT(u,u,uLimited,uLimited,@alphaEqnNoVmFluxFlat,@alphaEqnNoVmFluxFlat,aeigens,dx,dt,V0,rhol,rhog,aexp);
