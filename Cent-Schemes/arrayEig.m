@@ -16,7 +16,7 @@ function [arrayV,arrayVT,arrayLambda]=arrayEig(A)
   % Memory allocation
   arrayV=A;
   arrayLambda=A; 
-  
+
   for i=1:N 
     [arrayV(:,:,i),arrayLambda(:,:,i)]=eig(A(:,:,i));
     arrayVT(:,:,i)=arrayV(:,:,i).';
