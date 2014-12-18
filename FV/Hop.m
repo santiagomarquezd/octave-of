@@ -4,7 +4,7 @@ function [hvalue]=Hop(M, RHS, field, V)
     % [hvalue]=Hop(M, RHS, V)
     %
     % hvalue: column vector of H opearator values
-    % M: system matrix
+    % M: system matrix (time + convection + viscous)
     % RHS: right hand side of the system
     % field: solution field for M\RHS
     % V: column vector of volumes

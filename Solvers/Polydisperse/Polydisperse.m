@@ -1,7 +1,8 @@
-% Solves two waves of non-linear advection
-% using Flux Vector Splitting
+% Solves three waves of non-linear advection
+% using various methods for non-linear hyperbolic
+% equations
 % du/dt+d/dx[F(u)]=0; 
-% u=[u1;u2], F(u)=[v1*u1;v2*u2]
+% u=[u1;u2;u3], F(u)=[v1*u1;v2*u2;v3*u3]
 % Where:
 %       vi=vri*(1-ui)-sum_{j!=i}uj*vrj
 %       vr=V0i*(1-beta)^ai

@@ -4,7 +4,7 @@ function [a]=fvc_reconstruct(af,Sf)
     %
     % [a]=fvc_reconstruct(af,Sf)
     %
-    % a: cell bases reconstructed field
+    % a: cell based reconstructed field
     % af: surface field & Sf
     % Sf: face areas
     

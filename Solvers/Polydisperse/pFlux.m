@@ -1,8 +1,8 @@
-function [F]=pFlux(u,V0,a)
+function [F] = pFlux(u,V0,a)
     % Calculates the flux vector for a system of nonlinear advection
     % equations in polydisperse sedimentation
     %
-    % [F]=FVSpFlux(u,a)
+    % [F] = pFlux(u,a)
     %
     % F: calculated flux
     % u: states vector of dispersed phases
