@@ -16,7 +16,8 @@ function [A, RHS]=fvm_laplacian(field,gammaf,xC,xF,Sf)
 
     % Vectorized assembling of diffusion matrix
     % Diagonal part of advection matrix from 2 to N-1 (i.e. w/o BC)
-    A=-diag([0; Sf(2:end-2).*gammaf(2:end-2)./(xC(2:end-1)-xC(1:end-2))+Sf(3:end-1).*gammaf(3:end-1)./(xC(3:end)-xC(2:end-1)); 0]);
+    A=-diag([0; Sf(2:end-2).*gammaf(2:end-2)./(xC(2:end-1)-xC(1:end-2))+...
+        Sf(3:end-1).*gammaf(3:end-1)./(xC(3:end)-xC(2:end-1)); 0]);
       
     % Off diagonal parts of diffusion matrix
     A=A+diag([0; Sf(3:end-1).*gammaf(3:end-1)./(xC(3:end)-xC(2:end-1))],+1)+...

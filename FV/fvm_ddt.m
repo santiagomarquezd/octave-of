@@ -11,11 +11,11 @@ function [A, RHS]=fvm_ddt(factor, factor0, xn, V, dt, method)
     % dt: time-step
     % method: 1. Backward Euler, 2. Crank-Nicholson
 
-    if (method==1)
+    if (method == 1)
       % Allocate matrix and RHS
-      A=diag(ones(size(V)).*V/dt.*factor.internal);
-      RHS=xn.internal.*V/dt.*factor0.internal;
-    elseif (method==2)
+      A = diag(ones(size(V)).*V/dt.*factor.internal);
+      RHS = xn.internal.*V/dt.*factor0.internal;
+    elseif (method == 2)
     
     end
 end

@@ -19,17 +19,20 @@ end
 
 % Pressure terms are calculated apart in order
 % to correctly calculate the H operator
-volRHS = (-g +  fvc_grad(p, w, xC, xF, Sf, V)).*V;
+volRHS = (g - fvc_grad(p, w, xC, xF, Sf, V)).*V;
 
 % Final assembling
 UEqnM = ddtM + convM - diffM;
 UEqnRHS = ddtRHS + convRHS - diffRHS;
 
 % Solve
-if (fullVerbose==1)
-  disp('Solving for U')
+if (MomPred == 1)
+    if (fullVerbose == 1)
+        disp('Solving for U')
+    end
+
+    U.internal = UEqnM\(UEqnRHS + volRHS); 
 end
-U.internal = UEqnM\(UEqnRHS + volRHS); 
 
 % U from momentum predictor is stored for debugging purposes
 UmomPred = U;

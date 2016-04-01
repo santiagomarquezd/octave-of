@@ -15,13 +15,14 @@ rUAf = fvc_interpolate(rUA, w, xC, xF);
 U.internal = rUA.internal.*Hop(UEqnM, UEqnRHS, U, V);
 U = setBC(U, constField(0,N), xC, xF, g);
 
+% Set to zero
 phiC = fvc_ddtPhiCorrection(U0, phi0, rUA, rUAf, ... 
 rho0, w, xC, xF, Sf, dt)*0;
 
 phi = fvc_interpolate(rho, w, xC, xF).* ...
  ((fvc_interpolate(U, w, xC, xF).*Sf) + phiC);
 
-phi -= g.*fvc_interpolate(rho, w, xC, xF).*Sf;
+phi += g.*fvc_interpolate(rho, w, xC, xF).*Sf.*rUAf;
 
 % Assembling (implicit terms)
 if (fullVerbose == 1)
@@ -44,6 +45,6 @@ p.internal = pM\(pRHS + ERHS);
 % Flux correction
 phi -= flux(pM, pRHS, p);
 
-U.internal -= rUA.internal.*fvc_grad(U, w, xC, xF, Sf, V);
+U.internal += rUA.internal.*(g - fvc_grad(p, w, xC, xF, Sf, V));
 U = setBC(U, constField(0,N), xC, xF, g);
 

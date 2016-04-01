@@ -18,9 +18,16 @@ U0 = U;
 
 % phi field initialization from U
 % Creation of flux direction
-directionFlux = fvc_interpolate(U0, w, xC, xF);
-directionFlux = sign(directionFlux(2:end-1,1)+1E-9);
-phi = fvc_interpolate(U0, w, xC, xF).*Sf;
+if 1
+    directionFlux = fvc_interpolate(U0, w, xC, xF);
+    directionFlux = sign(directionFlux(2:end-1,1)+1E-9);
+    phi = fvc_interpolate(U0, w, xC, xF).*Sf;
+else
+    % Using Uphi
+    directionFlux = fvc_interpolate(Uphi, w, xC, xF);
+    directionFlux = sign(directionFlux(2:end-1,1)+1E-9);
+    phi = fvc_interpolate(Uphi, w, xC, xF).*Sf;
+end
 
 % Set fields as 'old' states
 phi0 = phi;
@@ -34,7 +41,7 @@ if 1 % Enables temporal loop
 % Temporal loop
 for step=1:timesteps
     fprintf('---------------------------------\n')
-    fprintf('Timestep: %d. Time: %g\n',step,step*dt)
+    fprintf('Timestep: %d. Time: %g\n\n',step,step*dt)
 
     % UEqn
     UEqn
