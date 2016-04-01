@@ -7,7 +7,7 @@ xright = 1;
 S = 1;
 
 % Physical paramaters
-nu = 1;
+nu = 2;
 rhoData = 1;
 g = -9.81;
 
