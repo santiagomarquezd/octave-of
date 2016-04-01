@@ -9,5 +9,6 @@ eval(['addpath ' b(1:end-1) '/Solvers/Traffic'])
 eval(['addpath ' b(1:end-1) '/Solvers/alphaEqnIsolatedVm'])
 eval(['addpath ' b(1:end-1) '/Solvers/alphaEqnIsolatedUm'])
 eval(['addpath ' b(1:end-1) '/Solvers/alphaEqnIsolated'])
+eval(['addpath ' b(1:end-1) '/Solvers/PISOSolver'])
 
 

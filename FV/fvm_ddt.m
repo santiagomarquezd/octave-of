@@ -1,4 +1,4 @@
-function [A, RHS]=fvm_ddt(factor,factor0,xn,V,dt,method)
+function [A, RHS]=fvm_ddt(factor, factor0, xn, V, dt, method)
     % Gives the temporal derivative matrix and corresponding RHS
     % d/dt x^(n+1)-x^(n)*V
     % 
