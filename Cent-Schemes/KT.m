@@ -53,5 +53,5 @@ function [u,v]=KT(u0,v0,uLimited,vLimited,ufluxfunction,vfluxfunction,Um,a,dx,dt
     % Time advancement
     u.internal=u0.internal-lambda*(Fu_star_plus_half-Fu_star_minus_half);
     v.internal=v0.internal-lambda*(Fv_star_plus_half-Fv_star_minus_half);
-    end
+    %end
 end

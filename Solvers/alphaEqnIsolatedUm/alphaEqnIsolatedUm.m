@@ -91,7 +91,7 @@ method='KTcFlux';
 UmIncluded=1; %1: included, 0: not included
 
 % Number of timesteps
-timesteps=50; %400; %100;
+timesteps=1; %100;
 
 % Number of cells
 N=100; %1000;
