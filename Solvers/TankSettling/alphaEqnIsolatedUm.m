@@ -14,13 +14,12 @@ clear all;
 %close all;
 page_screen_output(0);
 
-if 0
-    % Perfect sedimentation (convex flux)
-    % without layers
+if 1
+    % Test case for tanks
     
     % Physical paramaters
     g = 0;
-    V0 = 1;
+    V0 = 0.002;
     rhol = 1000;
     rhog = 1;
     % Exponent for relative velocity law
@@ -28,7 +27,7 @@ if 0
 
     % Domain extension
     xleft = 0;
-    xright = 1;
+    xright = 0.2;
     
     % Center of volume velocity values
     UmValue = 0;
@@ -44,10 +43,14 @@ if 0
     layers = 0;
 
     % Initial u of top u in case of layers
-    uTop = 0.5;
+    tot = 48 + 32;
+    uTop = 32/tot;
     UBottom = 1;
     % Bottom layer height
     layerH = 0.8;
+
+    % Value for front detection
+    uDet = (1 + uTop)/2;
     
 elseif 0
     % Perfect sedimentation (convex flux)
@@ -119,7 +122,7 @@ elseif 0
     % Bottom layer height
     layerH = 0.5;
 
-elseif 1
+elseif 0
     % Non-perfect sedimentation (non-convex flux)
     % (PhD. Thesis non-convex case)
    
@@ -157,7 +160,7 @@ elseif 1
 end
 
 % Time-step
-dt = 0.001; %0.001/2; %0.001;
+dt = 0.001*1000/2; %0.001/2; %0.001;
 
 % Initialization
 initia = 1;
@@ -168,13 +171,19 @@ method = 'KTcFlux';
 % Inclusion of Um in total flux for Rusanov method
 UmIncluded = 1; %1: included, 0: not included
 
+% Initialize time
+t = 0;
+
 % Number of timesteps
-timesteps = 500; %100;
+timesteps = 300000/1; %100;
 
 % Number of cells
 N = 100; %1000;
 
 % Numerical Pre-processing
+
+% Store front detection
+frontData = zeros(timesteps, 2);
 
 % Auxiliar variable for temporal debugging
 TAux = zeros(timesteps, 1);
@@ -262,6 +271,9 @@ end
 
 % Temporal loop
 for i = 1:timesteps
+
+    % Update time
+    t = t + dt;
 
     % Prints the actual iteration
     printf('Time-step: %d. Time: %g\n',i,i*dt);
@@ -351,6 +363,16 @@ for i = 1:timesteps
     % Field actualization
     Um0 = Um;
     % rhom0=rhom;
+
+    % Detect front and store its position for present time
+    iDet = max(find(u.internal > uDet));
+    if (!isempty(iDet))
+        xDet = (xC(iDet) + xC(iDet + 1))/2;
+    else
+        xDet = 0;
+    end
+    
+    frontData(i, 1:2) = [t xDet];    
 
 end
 
